@@ -1,0 +1,448 @@
+/* Dark Theme Styles */
+:root {
+    --primary-bg-color: #1a1a2e; /* Dunkles Marineblau/Lila */
+    --secondary-bg-color: #16213e; /* Etwas helleres Marineblau */
+    --card-bg-color: #1f2a40; /* Dunkelblau für Karten */
+    --text-color: #e0e0e0; /* Helles Grau für Text */
+    --text-muted-color: #a0a0a0; /* Dunkleres Grau für gedämpften Text */
+    --border-color: #2a3b5f; /* Bläulicher Rand */
+    --accent-color: #0F4C75; /* Akzentfarbe Blau */
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --info-color: #17a2b8;
+    --link-color: #61dafb; /* Helles Blau für Links */
+
+    --text-success-light: #77dd77; /* Helleres Grün für Text */
+    --text-danger-light: #ff7f7f;  /* Helleres Rot für Text */
+
+    --font-family-sans-serif: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+body {
+    background-color: var(--primary-bg-color);
+    color: var(--text-color);
+    padding-top: 2rem;
+    font-family: var(--font-family-sans-serif);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 900px; /* Etwas breiter für moderne Layouts */
+    background-color: var(--secondary-bg-color);
+    padding: 2rem;
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.15);
+    margin-bottom: 2.5rem;
+    border: 1px solid var(--border-color);
+}
+
+.page-header {
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.page-header h1 {
+    font-weight: 300; /* Leichtere Schrift für Titel */
+    font-size: 2.5rem;
+}
+
+.home-button-container {
+    margin-bottom: 1.5rem;
+}
+
+.home-button {
+    padding: 0.6rem 1.2rem;
+    display: inline-flex;
+    align-items: center;
+    background-color: transparent;
+    border: 1px solid var(--accent-color);
+    color: var(--accent-color);
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.home-button:hover {
+    background-color: var(--accent-color);
+    color: var(--primary-bg-color);
+}
+
+.home-button .fa-home {
+    margin-right: 0.6rem;
+}
+
+/* Form Controls */
+.form-control {
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.375rem; /* Bootstrap Standard, kann angepasst werden */
+}
+
+.form-control:focus {
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 0.25rem rgba(var(--link-color), 0.25);
+}
+
+.form-control::placeholder {
+    color: var(--text-muted-color);
+}
+
+.input-group .btn {
+    border-color: var(--accent-color);
+    background-color: var(--accent-color);
+    color: #fff; /* Helle Textfarbe für Buttons mit dunklem Hintergrund */
+}
+.input-group .btn:hover {
+    background-color: #0d3c5c; /* Etwas dunkleres Blau beim Hover */
+    border-color: #0d3c5c;
+}
+
+
+/* Cards */
+.card {
+    background-color: var(--card-bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem; /* Etwas weichere Kanten */
+    margin-bottom: 2rem;
+}
+
+.card-header {
+    background-color: var(--secondary-bg-color); /* Etwas dunkler als Kartenhintergrund */
+    color: var(--text-color);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 1.2rem;
+    font-weight: 500;
+    padding: 1rem 1.25rem;
+}
+.card-header a {
+    color: var(--text-color);
+}
+.card-header a:hover {
+    color: var(--link-color);
+}
+
+
+.card-body {
+    padding: 1.25rem;
+}
+
+.card-footer {
+    background-color: var(--secondary-bg-color);
+    border-top: 1px solid var(--border-color);
+    color: var(--text-muted-color);
+}
+
+.card-footer h5 { /* H5 im Footer heller machen */
+    color: var(--text-color);
+}
+
+/* League Entry Specifics */
+.league-entry {
+    background-color: var(--secondary-bg-color); /* Konsistent mit Karten-Innenleben */
+    border: 1px solid var(--border-color);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: 0.5rem;
+}
+
+.league-entry h4 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: var(--text-color);
+}
+
+.tier-icon {
+    width: 50px; /* Etwas kleiner */
+    height: auto;
+    margin-right: 0.75rem;
+    vertical-align: middle;
+    background-color: transparent; /* Für PNGs mit Transparenz */
+    border-radius: 4px; /* Leichte Abrundung falls nötig */
+}
+
+/* Messages */
+.alert {
+    border-radius: 0.5rem;
+    padding: 1rem 1.25rem;
+}
+.alert-danger {
+    background-color: rgba(var(--danger-color), 0.15);
+    color: var(--danger-color);
+    border: 1px solid rgba(var(--danger-color), 0.3);
+}
+.alert-info {
+    background-color: rgba(var(--info-color), 0.15);
+    color: var(--info-color);
+    border: 1px solid rgba(var(--info-color), 0.3);
+}
+.alert-warning {
+    background-color: rgba(255, 193, 7, 0.15); /* Bootstrap warning yellow */
+    color: #ffc107;
+    border: 1px solid rgba(255, 193, 7, 0.3);
+}
+
+
+/* Match History */
+.match-details-summary {
+    font-size: 0.85rem;
+    color: var(--text-muted-color);
+}
+
+.player-performance {
+    /* background-color: rgba(var(--accent-color), 0.15); */ /* Leicht akzentuierter Hintergrund */
+    background-color: #27324c; /* Ein etwas helleres, weniger gesättigtes Blau als card-bg */
+    border: 1px solid var(--accent-color);
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    color: var(--text-color); /* Standardtextfarbe sicherstellen */
+}
+.player-performance strong,
+.player-performance .fw-medium,
+.player-performance .fw-bold,
+.player-performance span { /* Alle span-Elemente auch abdecken */
+    color: var(--text-color) !important; /* Sicherstellen, dass der Text hell ist */
+}
+
+
+/* Tables */
+.table {
+    /* color: var(--text-color); */ /* Commented out, handled by more specific rules or Bootstrap */
+    border-color: var(--border-color);
+}
+
+/* Remove the general .table th, .table td rule as it's too broad now */
+/* .table th, .table td {
+    border-color: var(--border-color);
+    vertical-align: middle;
+} */
+
+.match-table thead th {
+    background-color: var(--secondary-bg-color) !important;
+    color: var(--text-color) !important;
+    border-color: var(--border-color) !important;
+    border-bottom-width: 2px !important; /* Stärkere untere Linie für Header */
+}
+
+.table-hover tbody tr:hover {
+    background-color: var(--accent-color); /* Akzentfarbe für Hover */
+    color: #fff;
+}
+.table-hover tbody tr:hover a {
+    color: #fff; /* Linkfarbe beim Hover der Zeile anpassen */
+    text-decoration: underline;
+}
+
+
+.table-info { /* Für den gesuchten Spieler */
+    background-color: rgba(var(--link-color), 0.1) !important;
+    color: var(--text-color) !important;
+}
+.table-info a {
+    color: var(--link-color) !important;
+}
+
+/* Team Colors for Match History Table */
+.team-blue {
+    background-color: rgba(var(--accent-color), 0.1) !important; /* Slightly more prominent than previous soft */
+}
+
+.team-red {
+    background-color: rgba(var(--danger-color), 0.1) !important; /* Slightly more prominent than previous soft */
+}
+
+.table-primary-soft tbody tr, /* Team 100 */
+.table tbody tr[th\:classappend*='table-primary-soft'] /* Expliziter für Thymeleaf-generierte Klassen */ {
+    background-color: rgba(var(--accent-color), 0.08);
+}
+
+.table-danger-soft tbody tr, /* Team 200 */
+.table tbody tr[th\:classappend*='table-danger-soft'] {
+    background-color: rgba(var(--danger-color), 0.08);
+}
+
+
+.match-table th {
+    font-weight: 600;
+}
+
+.match-table td a {
+    font-weight: 500;
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+.match-table td a:hover {
+    text-decoration: underline;
+}
+
+/* Champion Images & Fallback */
+.list-unstyled img.rounded, .match-table img.rounded {
+    border: 1px solid var(--border-color);
+}
+
+/* Collapse Icon */
+.card-header a .fa-chevron-down,
+.card-header a .fa-chevron-up {
+    transition: transform 0.2s ease-in-out;
+}
+.card-header a[aria-expanded="true"] .fa-chevron-down {
+    transform: rotate(180deg);
+}
+.card-header a[aria-expanded="false"] .fa-chevron-up { /* Falls es mal genutzt wird */
+    transform: rotate(0deg);
+}
+
+
+/* Bootstrap Overrides for Dark Theme */
+.text-muted {
+    color: var(--text-muted-color) !important;
+}
+
+.text-success {
+    color: var(--text-success-light) !important;
+}
+
+.text-danger {
+    color: var(--text-danger-light) !important;
+}
+
+.bg-light { /* Wird im Footer verwendet, anpassen oder entfernen */
+    background-color: var(--secondary-bg-color) !important;
+}
+
+.list-group-item {
+    background-color: var(--card-bg-color); /* Stellt sicher, dass Listenelemente den Kartenhintergrund haben */
+    border-color: var(--border-color);
+    color: var(--text-color);
+}
+
+.btn-outline-primary {
+    color: var(--link-color);
+    border-color: var(--link-color);
+}
+.btn-outline-primary:hover {
+    color: var(--primary-bg-color);
+    background-color: var(--link-color);
+    border-color: var(--link-color);
+}
+
+.btn-outline-secondary {
+    color: var(--link-color); /* Heller für bessere Sichtbarkeit */
+    border-color: var(--link-color);
+    background-color: transparent; /* Sicherstellen, dass es ein Outline-Button bleibt */
+}
+.btn-outline-secondary:hover {
+    color: var(--primary-bg-color); /* Textfarbe beim Hover */
+    background-color: var(--link-color);
+    border-color: var(--link-color);
+}
+/* Icon Farbe im Button anpassen */
+.btn-outline-secondary .fas {
+    color: var(--link-color);
+}
+.btn-outline-secondary:hover .fas {
+    color: var(--primary-bg-color);
+}
+
+
+.btn-primary {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+    color: #fff;
+}
+
+.btn-primary:hover {
+    background-color: #0d3c5c;
+    border-color: #0d3c5c;
+}
+
+/* Links global anpassen */
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+a:hover {
+    color: #82e9ff; /* Etwas helleres Blau beim Hover */
+    text-decoration: underline;
+}
+
+/* Spezifische Anpassungen für die Sichtbarkeit von Icons */
+.fas { /* Font Awesome Icons */
+    color: inherit; /* Erbt die Farbe vom Elternelement, was im Dark Theme oft besser ist */
+}
+
+/* Scrollbar (optional, für Webkit-Browser) */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--secondary-bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--accent-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #0d3c5c;
+}
+
+/* Text selection */
+::selection {
+  background-color: var(--accent-color);
+  color: #fff;
+}
+
+/* Feinabstimmung für die Lesbarkeit von Text auf verschiedenen Hintergründen */
+.display-5 { /* Titel "Summoner Profile" */
+    color: var(--text-color);
+}
+
+.lead { /* Winrate Text */
+    color: var(--text-color);
+}
+
+.fw-bold {
+    color: var(--text-color); /* Stellt sicher, dass fetter Text gut lesbar ist */
+}
+.fw-medium {
+     color: var(--text-color);
+}
+
+
+/* Ensure champion name fallbacks are visible */
+.text-muted.small.me-2 {
+    color: var(--text-muted-color) !important;
+}
+
+/* Standard Absatzfarbe sicherstellen */
+p {
+    color: var(--text-color);
+    margin-bottom: 0.75rem; /* Konsistenter Abstand für Absätze */
+}
+
+/* H5 in list-group-item heller machen */
+.list-group-item h5 {
+    color: var(--text-color);
+    font-weight: 500; /* Etwas dicker, falls nötig */
+}
+
+/* Modify existing .match-table td and .match-table td .fw-medium */
+.match-table tbody td {
+    background-color: transparent !important; /* Wichtig für Standardzeilen-Hintergrund */
+    color: var(--text-color) !important;      /* Stellt sicher, dass Text hell ist */
+    border-color: var(--border-color) !important;
+    vertical-align: middle;
+}
+
+/* .match-table td .fw-medium can now inherit color, but keep for specificity if needed */
+.match-table td .fw-medium {
+    color: var(--text-color) !important; /* KDA und ähnliche Texte, bleibt zur Sicherheit */
+} 
