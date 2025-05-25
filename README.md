@@ -108,3 +108,11 @@ This project is licensed under the **GNU GPL v3**. See the [`LICENSE`](./LICENSE
 ## 📬 Feedback & Contact
 
 Found a bug or want to suggest a feature? Open an issue or a pull request — or just drop a star if you find the project useful! 🌟
+
+## 🙌 Contributors
+
+Huge thanks to everyone who supports this project!  
+Special appreciation to:
+
+- **Ana** (*aka Anci*) – contributed to coding and testing, and helped improve the project overall
+
