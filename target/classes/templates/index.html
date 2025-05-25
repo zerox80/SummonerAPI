@@ -12,79 +12,42 @@
     <link rel="stylesheet" th:href="@{/css/styles.css}">
 </head>
 <body>
-    <h1 class="text-center">Currently only EUW is supported.</h1>
-    <div class="container mt-5">
-        <!-- Home Button -->
-        <div class="home-button-container">
-            <a href="/" class="btn btn-outline-primary home-button">
-                <i class="fas fa-home"></i> Home
-            </a>
+<h1 class="text-center">Currently only EUW is supported.</h1>
+<div class="container mt-5">
+    <!-- Home Button -->
+    <div class="home-button-container">
+        <a href="/" class="btn btn-outline-primary home-button">
+            <i class="fas fa-home"></i> Home
+        </a>
+    </div>
+
+    <div class="page-header text-center">
+        <h1 class="display-5">Summoner Profile</h1> <!-- More prominent title -->
+    </div>
+
+    <form th:action="@{/search}" method="post" class="mb-5 position-relative">
+        <div class="input-group mb-3 shadow-sm">
+            <input type="text" id="riotId" name="riotId" class="form-control form-control-lg" placeholder="Enter Riot ID (e.g., Name#TAG)" required autocomplete="off" />
+            <button class="btn btn-primary btn-lg" type="submit"><i class="fas fa-search"></i> Search</button>
         </div>
+        <div id="suggestions-container" class="list-group position-absolute w-100" style="z-index: 1000; top: 100%; left: 0;"></div>
+    </form>
 
-        <div class="page-header text-center">
-            <h1 class="display-5">Summoner Profile</h1> <!-- More prominent title -->
+    <div th:if="${summoner}" class="card section-card">
+        <div class="card-header section-header">
+            Summoner Information
         </div>
-
-        <form th:action="@{/search}" method="post" class="mb-5 position-relative">
-            <div class="input-group mb-3 shadow-sm">
-                <input type="text" id="riotId" name="riotId" class="form-control form-control-lg" placeholder="Enter Riot ID (e.g., Name#TAG)" required autocomplete="off" />
-                <button class="btn btn-primary btn-lg" type="submit"><i class="fas fa-search"></i> Search</button>
-            </div>
-            <div id="suggestions-container" class="list-group position-absolute w-100" style="z-index: 1000; top: 100%; left: 0;"></div>
-        </form>
-
-        <div th:if="${summoner}" class="card section-card">
-            <div class="card-header section-header">
-                Summoner Information
-            </div>
-            <div class="card-body">
-                <p><strong>Name:</strong> <span th:text="${not #strings.isEmpty(summoner.name) ? summoner.name : 'N/A'}">N/A</span></p>
-                <p><strong>Level:</strong> <span th:text="${summoner.summonerLevel}">N/A</span></p>
-                <!-- PUUID Removed as per request -->
-                <!-- <p class="mb-0"><strong>PUUID:</strong> <small th:text="${summoner.puuid}" class="text-muted">N/A</small></p> -->
-            </div>
-
-            <!-- Centered Winrate and Champion Stats -->
-            <div class="card-footer text-center bg-light" th:if="${summoner != null}">
-                <div th:with="rankedSolo5x5Entry = ${leagueEntries?.?[#strings.equals(queueType, 'RANKED_SOLO_5x5')]}">
-                    <div th:if="${rankedSolo5x5Entry != null && !rankedSolo5x5Entry.isEmpty()}">
-                        <div th:with="entry = ${rankedSolo5x5Entry[0]}">
-                             <h5 class="my-2">Ranked Solo 5x5 Winrate</h5>
-                            <p th:if="${entry.wins + entry.losses > 0}" class="lead">
-                                <span th:text="${T(java.lang.Math).round( (entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0 )}">0</span>%
-                                <small class="text-muted" th:text="'(' + ${entry.wins} + 'W / ' + ${entry.losses} + 'L)'"></small>
-                            </p>
-                             <p th:unless="${entry.wins + entry.losses > 0}" class="text-muted">No ranked solo games played recently.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div th:if="${championPlayCounts != null && !championPlayCounts.isEmpty()}" class="mt-3">
-                    <h5 class="my-2">Recently Played Champions (Last <span th:text="${matchHistory.size()}"></span> Games)</h5>
-                    <ul class="list-unstyled">
-                        <li th:each="champEntry, iterStat : ${championPlayCounts.entrySet()}" th:if="${iterStat.count <= 5}" class="d-flex align-items-center justify-content-center mb-2">
-                            <img th:src="@{'/ui/champions/' + ${champEntry.key} + '.png'}"
-                                 th:alt="${champEntry.key}"
-                                 class="me-2 rounded"
-                                 style="width: 32px; height: 32px; object-fit: cover;"
-                                 onerror="this.style.display='none'; var fallbackText = document.createElement('span'); fallbackText.className='text-muted small me-2'; fallbackText.textContent=this.alt + ' (image not found)'; this.parentNode.insertBefore(fallbackText, this);"/>
-                            <span th:text="${champEntry.key}" class="fw-bold">ChampionName</span>
-                            <span class="text-muted mx-2">-</span>
-                            <span th:text="${champEntry.value}">0</span>
-                            <span class="ms-1 text-muted">games</span>
-                        </li>
-                    </ul>
-                </div>
-                <div th:if="${championPlayCounts != null && championPlayCounts.isEmpty() && matchHistory != null && !matchHistory.isEmpty()}" class="mt-3">
-                     <p class="text-muted">No champion data from recent matches to display.</p>
-                </div>
-            </div>
+        <div class="card-body">
+            <p><strong>Name:</strong> <span th:text="${not #strings.isEmpty(summoner.name) ? summoner.name : 'N/A'}">N/A</span></p>
+            <p><strong>Level:</strong> <span th:text="${summoner.summonerLevel}">N/A</span></p>
+            <!-- PUUID Removed as per request -->
+            <!-- <p class="mb-0"><strong>PUUID:</strong> <small th:text="${summoner.puuid}" class="text-muted">N/A</small></p> -->
         </div>
 
         <!-- Display League Entries -->
         <div th:if="${leagueEntries != null && !leagueEntries.isEmpty()}" class="card section-card">
             <div class="card-header section-header">
-                 Ranked Information
+                Ranked Information
             </div>
             <div class="list-group list-group-flush">
                 <div th:each="entry : ${leagueEntries}" class="list-group-item league-entry">
@@ -121,235 +84,274 @@
             </div>
         </div>
 
-        <div th:if="${leagueEntries != null && leagueEntries.isEmpty() && summoner != null && leagueError == null}" class="alert alert-info info-message" role="alert">
-            No ranked data found for this summoner (possibly unranked in all queues).
-        </div>
-        <div th:if="${leagueError}" class="alert alert-danger error-message" role="alert">
-            <strong th:text="${leagueError}">Error loading league data.</strong>
-        </div>
-
-        <!-- Match History Section -->
-        <div th:if="${summoner != null && matchHistory != null}" class="card section-card mt-4">
-            <div class="card-header section-header">
-                <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="false" aria-controls="matchHistoryCollapse" class="text-decoration-none d-block">
-                    Match History <span class="small text-muted">(click to expand/collapse) <i class="fas fa-chevron-down fa-xs"></i></span>
-                </a>
-            </div>
-            <div class="collapse" id="matchHistoryCollapse">
-                <div th:if="${matchHistory.isEmpty()}" class="card-body">
-                    <p th:if="${matchHistoryInfo}" th:text="${matchHistoryInfo}">No recent matches found.</p>
-                    <p th:unless="${matchHistoryInfo}">No recent matches found or an error occurred.</p>
-                </div>
-                <div th:if="${matchHistoryError}" class="alert alert-warning m-3" role="alert" th:text="${matchHistoryError}">
-                    Error loading match history.
-                </div>
-
-                <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
-                    <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-3">
-                        <div class="d-flex w-100 justify-content-between">
-                            <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ')} + ' (' + (${match.info.gameDuration / 60} + 'm ' + ${match.info.gameDuration % 60} + 's') + ')'">Game Mode (Duration)</h5>
-                            <th:block th:with="searchedSummonerPuuid=${summoner.puuid}">
-                                <th:block th:each="p : ${match.info.participants}" th:if="${p.puuid == searchedSummonerPuuid}">
-                                    <span th:text="${p.win ? 'Victory' : 'Defeat'}"
-                                           th:classappend="${p.win ? 'text-success fw-bold' : 'text-danger fw-bold'}"></span>
-                                    <span th:if="${match.info.lpChange != null}"
-                                          th:text="${match.info.lpChange > 0 ? '+' + match.info.lpChange + ' LP' : match.info.lpChange + ' LP'}"
-                                          th:classappend="${match.info.lpChange > 0 ? 'text-success ms-2' : (match.info.lpChange < 0 ? 'text-danger ms-2' : 'text-muted ms-2')}">
-                                    </span>
-                                </th:block>
-                            </th:block>
-                        </div>
-                        <p class="mb-2 match-details-summary">
-                           <small th:text="'Match ID: ' + ${match.metadata.matchId}"></small> &bull;
-                           <small th:text="${#dates.format(new java.util.Date(match.info.gameEndTimestamp), 'dd MMM yyyy HH:mm')}"></small>
+        <!-- Centered Winrate and Champion Stats -->
+        <div class="card-footer text-center bg-light" th:if="${summoner != null}">
+            <div th:with="rankedSolo5x5Entry = ${leagueEntries?.?[#strings.equals(queueType, 'RANKED_SOLO_5x5')]}">
+                <div th:if="${rankedSolo5x5Entry != null && !rankedSolo5x5Entry.isEmpty()}">
+                    <div th:with="entry = ${rankedSolo5x5Entry[0]}">
+                        <h5 class="my-2">Ranked Solo 5x5 Winrate</h5>
+                        <p th:if="${entry.wins + entry.losses > 0}" class="lead">
+                            <span th:text="${T(java.lang.Math).round( (entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0 )}">0</span>%
+                            <small class="text-muted" th:text="'(' + ${entry.wins} + 'W / ' + ${entry.losses} + 'L)'"></small>
                         </p>
-
-                        <!-- Searched Summoner's Performance -->
-                        <div th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
-                             <strong>Your Performance:</strong>
-                             <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded"
-                                  onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
-                             <span th:text="${p.championName}" class="fw-medium">Champ</span> -
-                             KDA: <span th:text="${p.kda}" class="fw-bold">K/D/A</span>
-                        </div>
-
-                        <!-- Participants Table -->
-                        <details class="mt-2">
-                            <summary class="btn btn-sm btn-outline-secondary">Show All Participants <i class="fas fa-users fa-xs"></i></summary>
-                            
-                            <!-- Blue Team Table -->
-                            <h6 class="mt-3 text-primary">Blue Team</h6>
-                            <table class="table table-sm table-hover mt-2 match-table team-blue-table">
-                                <thead>
-                                    <tr>
-                                        <th>Champion</th>
-                                        <th>Player</th>
-                                        <th>KDA</th>
-                                    </tr>
-                                </thead>
-                                <tbody th:with="searchedPuuid=${summoner.puuid}">
-                                    <tr th:each="p : ${match.info.participants}" th:if="${p.teamId == 100}"
-                                        th:classappend="${p.puuid == searchedPuuid ? 'table-info' : ''}">
-                                        <td>
-                                            <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded"
-                                                 onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
-                                            <span th:text="${p.championName}">Champion</span>
-                                        </td>
-                                        <td>
-                                            <a th:if="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
-                                               th:href="@{/search(riotId=${p.riotIdGameName} + '#' + ${p.riotIdTagline})}"
-                                               th:text="${p.riotIdGameName} + '#' + ${p.riotIdTagline}"
-                                               title="Search this player">Player Name</a>
-                                            <span th:unless="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
-                                                  th:text="${p.summonerName} ?: 'Unknown Player'">Player Name</span>
-                                        </td>
-                                        <td th:text="${p.kda}" class="fw-medium">K/D/A</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-
-                            <!-- Red Team Table -->
-                            <h6 class="mt-3 text-danger">Red Team</h6>
-                            <table class="table table-sm table-hover mt-2 match-table team-red-table">
-                                <thead>
-                                    <tr>
-                                        <th>Champion</th>
-                                        <th>Player</th>
-                                        <th>KDA</th>
-                                    </tr>
-                                </thead>
-                                <tbody th:with="searchedPuuid=${summoner.puuid}">
-                                    <tr th:each="p : ${match.info.participants}" th:if="${p.teamId == 200}"
-                                        th:classappend="${p.puuid == searchedPuuid ? 'table-info' : ''}">
-                                        <td>
-                                            <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded"
-                                                 onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
-                                            <span th:text="${p.championName}">Champion</span>
-                                        </td>
-                                        <td>
-                                            <a th:if="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
-                                               th:href="@{/search(riotId=${p.riotIdGameName} + '#' + ${p.riotIdTagline})}"
-                                               th:text="${p.riotIdGameName} + '#' + ${p.riotIdTagline}"
-                                               title="Search this player">Player Name</a>
-                                            <span th:unless="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
-                                                  th:text="${p.summonerName} ?: 'Unknown Player'">Player Name</span>
-                                        </td>
-                                        <td th:text="${p.kda}" class="fw-medium">K/D/A</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </details>
+                        <p th:unless="${entry.wins + entry.losses > 0}" class="text-muted">No ranked solo games played recently.</p>
                     </div>
                 </div>
             </div>
-        </div>
-        <!-- End Match History Section -->
 
-        <div th:if="${error}" class="alert alert-danger error-message mt-4" role="alert">
-            <strong th:text="${error}">An error occurred.</strong>
+            <div th:if="${championPlayCounts != null && !championPlayCounts.isEmpty()}" class="mt-3">
+                <h5 class="my-2">Recently Played Champions (Last <span th:text="${matchHistory.size()}"></span> Games)</h5>
+                <ul class="list-unstyled">
+                    <li th:each="champEntry, iterStat : ${championPlayCounts.entrySet()}" th:if="${iterStat.count <= 5}" class="d-flex align-items-center justify-content-center mb-2">
+                        <img th:src="@{'/ui/champions/' + ${champEntry.key} + '.png'}"
+                             th:alt="${champEntry.key}"
+                             class="me-2 rounded"
+                             style="width: 32px; height: 32px; object-fit: cover;"
+                             onerror="this.style.display='none'; var fallbackText = document.createElement('span'); fallbackText.className='text-muted small me-2'; fallbackText.textContent=this.alt + ' (image not found)'; this.parentNode.insertBefore(fallbackText, this);"/>
+                        <span th:text="${champEntry.key}" class="fw-bold">ChampionName</span>
+                        <span class="text-muted mx-2">-</span>
+                        <span th:text="${champEntry.value}">0</span>
+                        <span class="ms-1 text-muted">games</span>
+                    </li>
+                </ul>
+            </div>
+            <div th:if="${championPlayCounts != null && championPlayCounts.isEmpty() && matchHistory != null && !matchHistory.isEmpty()}" class="mt-3">
+                <p class="text-muted">No champion data from recent matches to display.</p>
+            </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS Bundle (Popper.js included) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-    <script th:src="@{/js/main.js}"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const riotIdInput = document.getElementById('riotId');
-            const suggestionsContainer = document.getElementById('suggestions-container');
-            let debounceTimer;
+    <div th:if="${leagueEntries != null && leagueEntries.isEmpty() && summoner != null && leagueError == null}" class="alert alert-info info-message" role="alert">
+        No ranked data found for this summoner (possibly unranked in all queues).
+    </div>
+    <div th:if="${leagueError}" class="alert alert-danger error-message" role="alert">
+        <strong th:text="${leagueError}">Error loading league data.</strong>
+    </div>
 
-            function fetchAndDisplaySuggestions(query) {
-                clearTimeout(debounceTimer);
-                if (query.length === 1) { // Hide for single character, show full history if empty
-                    suggestionsContainer.innerHTML = '';
-                    suggestionsContainer.style.display = 'none';
-                    return;
-                }
+    <!-- Match History Section -->
+    <div th:if="${summoner != null && matchHistory != null}" class="card section-card mt-4">
+        <div class="card-header section-header">
+            <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="false" aria-controls="matchHistoryCollapse" class="text-decoration-none d-block">
+                Match History <span class="small text-muted">(click to expand/collapse) <i class="fas fa-chevron-down fa-xs"></i></span>
+            </a>
+        </div>
+        <div class="collapse" id="matchHistoryCollapse">
+            <div th:if="${matchHistory.isEmpty()}" class="card-body">
+                <p th:if="${matchHistoryInfo}" th:text="${matchHistoryInfo}">No recent matches found.</p>
+                <p th:unless="${matchHistoryInfo}">No recent matches found or an error occurred.</p>
+            </div>
+            <div th:if="${matchHistoryError}" class="alert alert-warning m-3" role="alert" th:text="${matchHistoryError}">
+                Error loading match history.
+            </div>
 
-                debounceTimer = setTimeout(() => {
-                    fetch(`/api/summoner-suggestions?query=${encodeURIComponent(query)}`)
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error(`HTTP error! status: ${response.status}`);
-                            }
-                            return response.json();
-                        })
-                        .then(suggestions => {
-                            suggestionsContainer.innerHTML = '';
-                            if (suggestions.length > 0) {
-                                suggestions.forEach(suggestion => {
-                                    const item = document.createElement('a');
-                                    item.href = '#';
-                                    item.classList.add('list-group-item', 'list-group-item-action', 'd-flex', 'align-items-center');
-                                    
-                                    // Profile Icon
-                                    const img = document.createElement('img');
-                                    img.src = suggestion.profileIconUrl;
-                                    img.alt = 'Icon';
-                                    img.classList.add('rounded-circle', 'me-2');
-                                    img.style.width = '30px';
-                                    img.style.height = '30px';
-                                    img.onerror = function() { // Fallback if image fails to load
-                                        this.style.display = 'none'; 
-                                        // Optionally, add a placeholder or hide the icon spot
-                                    };
-                                    item.appendChild(img);
+            <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
+                <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-3">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ')} + ' (' + (${match.info.gameDuration / 60} + 'm ' + ${match.info.gameDuration % 60} + 's') + ')'">Game Mode (Duration)</h5>
+                        <div class="d-flex align-items-center">
+                            <th:block th:with="searchedSummonerPuuid=${summoner.puuid}">
+                                <th:block th:each="p : ${match.info.participants}" th:if="${p.puuid == searchedSummonerPuuid}">
+                                        <span th:text="${p.win ? 'Victory' : 'Defeat'}"
+                                              th:classappend="${p.win ? 'text-success fw-bold' : 'text-danger fw-bold'}"></span>
+                                    <span th:if="${match.info.lpChange != null}"
+                                          th:text="${match.info.lpChange > 0 ? '+' + match.info.lpChange + ' LP' : match.info.lpChange + ' LP'}"
+                                          th:classappend="${match.info.lpChange > 0 ? 'text-success ms-2' : (match.info.lpChange < 0 ? 'text-danger ms-2' : 'text-muted ms-2')}">
+                                        </span>
+                                </th:block>
+                            </th:block>
+                        </div>
+                    </div>
+                    <p class="mb-2 match-details-summary">
+                        <small th:text="'Match ID: ' + ${match.metadata.matchId}"></small> &bull;
+                        <small th:text="${#dates.format(new java.util.Date(match.info.gameEndTimestamp), 'dd MMM yyyy HH:mm')}"></small>
+                    </p>
 
-                                    // Riot ID and Level
-                                    const textContainer = document.createElement('div');
-                                    const riotIdSpan = document.createElement('span');
-                                    riotIdSpan.textContent = suggestion.riotId;
-                                    textContainer.appendChild(riotIdSpan);
+                    <!-- Searched Summoner's Performance -->
+                    <div th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
+                        <strong>Your Performance:</strong>
+                        <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded"
+                             onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
+                        <span th:text="${p.championName}" class="fw-medium">Champ</span> -
+                        KDA: <span th:text="${p.kda}" class="fw-bold">K/D/A</span>
+                    </div>
 
-                                    if (suggestion.summonerLevel) {
-                                        const levelSpan = document.createElement('span');
-                                        levelSpan.textContent = ` (Lvl: ${suggestion.summonerLevel})`;
-                                        levelSpan.classList.add('text-muted', 'ms-1', 'small');
-                                        textContainer.appendChild(levelSpan);
-                                    }
-                                    item.appendChild(textContainer);
+                    <!-- Participants Table -->
+                    <details class="mt-2">
+                        <summary class="btn btn-sm btn-outline-secondary">Show All Participants <i class="fas fa-users fa-xs"></i></summary>
 
-                                    item.addEventListener('click', function (e) {
-                                        e.preventDefault();
-                                        riotIdInput.value = suggestion.riotId; // Use suggestion.riotId here
-                                        suggestionsContainer.innerHTML = '';
-                                        suggestionsContainer.style.display = 'none';
-                                    });
-                                    suggestionsContainer.appendChild(item);
-                                });
-                                suggestionsContainer.style.display = 'block';
-                            } else {
-                                suggestionsContainer.style.display = 'none';
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error fetching suggestions:', error);
-                            suggestionsContainer.innerHTML = '';
-                            suggestionsContainer.style.display = 'none';
-                        });
-                }, query === '' ? 0 : 300); // No debounce if query is empty (e.g. on focus)
+                        <!-- Blue Team Table -->
+                        <h6 class="mt-3 text-primary">Blue Team</h6>
+                        <table class="table table-sm table-hover mt-2 match-table team-blue-table">
+                            <thead>
+                            <tr>
+                                <th>Champion</th>
+                                <th>Player</th>
+                                <th>KDA</th>
+                            </tr>
+                            </thead>
+                            <tbody th:with="searchedPuuid=${summoner.puuid}">
+                            <tr th:each="p : ${match.info.participants}" th:if="${p.teamId == 100}"
+                                th:classappend="${p.puuid == searchedPuuid ? 'table-info' : ''}">
+                                <td>
+                                    <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded"
+                                         onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
+                                    <span th:text="${p.championName}">Champion</span>
+                                </td>
+                                <td>
+                                    <a th:if="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
+                                       th:href="@{/search(riotId=${p.riotIdGameName} + '#' + ${p.riotIdTagline})}"
+                                       th:text="${p.riotIdGameName} + '#' + ${p.riotIdTagline}"
+                                       title="Search this player">Player Name</a>
+                                    <span th:unless="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
+                                          th:text="${p.summonerName} ?: 'Unknown Player'">Player Name</span>
+                                </td>
+                                <td th:text="${p.kda}" class="fw-medium">K/D/A</td>
+                            </tr>
+                            </tbody>
+                        </table>
+
+                        <!-- Red Team Table -->
+                        <h6 class="mt-3 text-danger">Red Team</h6>
+                        <table class="table table-sm table-hover mt-2 match-table team-red-table">
+                            <thead>
+                            <tr>
+                                <th>Champion</th>
+                                <th>Player</th>
+                                <th>KDA</th>
+                            </tr>
+                            </thead>
+                            <tbody th:with="searchedPuuid=${summoner.puuid}">
+                            <tr th:each="p : ${match.info.participants}" th:if="${p.teamId == 200}"
+                                th:classappend="${p.puuid == searchedPuuid ? 'table-info' : ''}">
+                                <td>
+                                    <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded"
+                                         onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
+                                    <span th:text="${p.championName}">Champion</span>
+                                </td>
+                                <td>
+                                    <a th:if="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
+                                       th:href="@{/search(riotId=${p.riotIdGameName} + '#' + ${p.riotIdTagline})}"
+                                       th:text="${p.riotIdGameName} + '#' + ${p.riotIdTagline}"
+                                       title="Search this player">Player Name</a>
+                                    <span th:unless="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
+                                          th:text="${p.summonerName} ?: 'Unknown Player'">Player Name</span>
+                                </td>
+                                <td th:text="${p.kda}" class="fw-medium">K/D/A</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </details>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- End Match History Section -->
+
+    <div th:if="${error}" class="alert alert-danger error-message mt-4" role="alert">
+        <strong th:text="${error}">An error occurred.</strong>
+    </div>
+</div>
+
+<!-- Bootstrap JS Bundle (Popper.js included) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<script th:src="@{/js/main.js}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const riotIdInput = document.getElementById('riotId');
+        const suggestionsContainer = document.getElementById('suggestions-container');
+        let debounceTimer;
+
+        function fetchAndDisplaySuggestions(query) {
+            clearTimeout(debounceTimer);
+            if (query.length === 1) { // Hide for single character, show full history if empty
+                suggestionsContainer.innerHTML = '';
+                suggestionsContainer.style.display = 'none';
+                return;
             }
 
-            riotIdInput.addEventListener('input', function () {
-                const query = riotIdInput.value;
-                fetchAndDisplaySuggestions(query);
-            });
+            debounceTimer = setTimeout(() => {
+                fetch(`/api/summoner-suggestions?query=${encodeURIComponent(query)}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(suggestions => {
+                        suggestionsContainer.innerHTML = '';
+                        if (suggestions.length > 0) {
+                            suggestions.forEach(suggestion => {
+                                const item = document.createElement('a');
+                                item.href = '#';
+                                item.classList.add('list-group-item', 'list-group-item-action', 'd-flex', 'align-items-center');
 
-            riotIdInput.addEventListener('focus', function () {
-                if (riotIdInput.value === '') {
-                    fetchAndDisplaySuggestions(''); // Fetch full history on focus if input is empty
-                }
-            });
+                                // Profile Icon
+                                const img = document.createElement('img');
+                                img.src = suggestion.profileIconUrl;
+                                img.alt = 'Icon';
+                                img.classList.add('rounded-circle', 'me-2');
+                                img.style.width = '30px';
+                                img.style.height = '30px';
+                                img.onerror = function() { // Fallback if image fails to load
+                                    this.style.display = 'none';
+                                    // Optionally, add a placeholder or hide the icon spot
+                                };
+                                item.appendChild(img);
 
-            // Hide suggestions when clicking outside
-            document.addEventListener('click', function (event) {
-                if (!riotIdInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
-                    suggestionsContainer.innerHTML = '';
-                    suggestionsContainer.style.display = 'none';
-                }
-            });
+                                // Riot ID and Level
+                                const textContainer = document.createElement('div');
+                                const riotIdSpan = document.createElement('span');
+                                riotIdSpan.textContent = suggestion.riotId;
+                                textContainer.appendChild(riotIdSpan);
+
+                                if (suggestion.summonerLevel) {
+                                    const levelSpan = document.createElement('span');
+                                    levelSpan.textContent = ` (Lvl: ${suggestion.summonerLevel})`;
+                                    levelSpan.classList.add('text-muted', 'ms-1', 'small');
+                                    textContainer.appendChild(levelSpan);
+                                }
+                                item.appendChild(textContainer);
+
+                                item.addEventListener('click', function (e) {
+                                    e.preventDefault();
+                                    riotIdInput.value = suggestion.riotId; // Use suggestion.riotId here
+                                    suggestionsContainer.innerHTML = '';
+                                    suggestionsContainer.style.display = 'none';
+                                });
+                                suggestionsContainer.appendChild(item);
+                            });
+                            suggestionsContainer.style.display = 'block';
+                        } else {
+                            suggestionsContainer.style.display = 'none';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching suggestions:', error);
+                        suggestionsContainer.innerHTML = '';
+                        suggestionsContainer.style.display = 'none';
+                    });
+            }, query === '' ? 0 : 300); // No debounce if query is empty (e.g. on focus)
+        }
+
+        riotIdInput.addEventListener('input', function () {
+            const query = riotIdInput.value;
+            fetchAndDisplaySuggestions(query);
         });
-    </script>
+
+        riotIdInput.addEventListener('focus', function () {
+            if (riotIdInput.value === '') {
+                fetchAndDisplaySuggestions(''); // Fetch full history on focus if input is empty
+            }
+        });
+
+        // Hide suggestions when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!riotIdInput.contains(event.target) && !suggestionsContainer.contains(event.target)) {
+                suggestionsContainer.innerHTML = '';
+                suggestionsContainer.style.display = 'none';
+            }
+        });
+    });
+</script>
 </body>
-</html> 
+</html>
