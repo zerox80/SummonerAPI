@@ -279,4 +279,3 @@ This document outlines the steps to set up the PostgreSQL database for local dev
 
 After completing these steps and ensuring your entity classes are correctly annotated (`@Entity`, `@Id`), your Spring Boot application should be able to connect to the PostgreSQL database and automatically create/update the schema when it starts.
 
-Mach das README besser, so dass datenbank usw nicht geleaked wird weiß du
