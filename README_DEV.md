@@ -1,3 +1,209 @@
+# # Developer Readme: Datab
+
+--
+
+### Reasoning
+
+The user wants me to improve this README so that sensitive database information (like usernames, passwords, database names) is not leaked/exposed. This is a good security practice. I should:
+
+1. Use environment variables or placeholders instead of hardcoded credentials
+2. Add a section about security best practices
+3. Use generic examples instead of the specific credentials shown
+4. Add instructions on how to use environment variables
+5. Maybe add a .env file example
+6. Emphasize not to commit sensitive data to version control
+
+### Content
+
+# Developer Readme: Database Setup (PostgreSQL)
+
+This document outlines the steps to set up the PostgreSQL database for local development of the Riot API Spring application.
+
+## Prerequisites
+
+*   PostgreSQL installed and running
+*   A PostgreSQL superuser account (e.g., `postgres`) or a user with privileges to create databases and users
+
+## Security Notice ⚠️
+
+**Never commit database credentials to version control!** This README uses placeholder values that should be replaced with your actual configuration.
+
+## Setup Steps
+
+### 1. Environment Configuration
+
+Create a `.env` file in your project root (add this to `.gitignore`):
+
+```bash
+# Database Configuration
+DB_NAME=your_database_name
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_secure_password
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+### 2. Connect to PostgreSQL
+
+Connect to your PostgreSQL instance using `psql`:
+
+```bash
+sudo -u postgres psql
+```
+
+Or with a dedicated user:
+
+```bash
+psql -U your_superuser -d postgres
+```
+
+### 3. Create the Database
+
+Replace `${DB_NAME}` with your chosen database name:
+
+```sql
+CREATE DATABASE ${DB_NAME};
+```
+
+### 4. Create the Application User
+
+Replace placeholders with your chosen credentials:
+
+```sql
+CREATE USER ${DB_USERNAME} WITH PASSWORD '${DB_PASSWORD}';
+```
+
+**Important:** Use a strong, unique password for any environment.
+
+### 5. Grant Privileges
+
+Connect to the newly created database and grant necessary privileges:
+
+```sql
+-- Connect to the database
+\c ${DB_NAME}
+
+-- Grant basic connection privileges
+GRANT CONNECT ON DATABASE ${DB_NAME} TO ${DB_USERNAME};
+
+-- Grant schema privileges
+GRANT USAGE ON SCHEMA public TO ${DB_USERNAME};
+GRANT CREATE ON SCHEMA public TO ${DB_USERNAME};
+
+-- For development environment (more permissive)
+GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USERNAME};
+
+-- Grant privileges on future objects
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${DB_USERNAME};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${DB_USERNAME};
+```
+
+### 6. Application Configuration
+
+Update your `src/main/resources/application.properties`:
+
+```properties
+# Database Configuration (using environment variables)
+spring.datasource.url=jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME}
+spring.datasource.username=${DB_USERNAME}
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.show-sql=true
+
+# Optional: For initial setup, use 'create' to ensure tables are created
+# spring.jpa.hibernate.ddl-auto=create
+```
+
+### 7. Alternative: Using application-dev.properties
+
+Create `src/main/resources/application-dev.properties` for development-specific settings:
+
+```properties
+# Development Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/your_dev_database
+spring.datasource.username=your_dev_user
+spring.datasource.password=your_dev_password
+
+# Development-specific settings
+spring.jpa.show-sql=true
+spring.jpa.hibernate.ddl-auto=create-drop
+logging.level.org.hibernate.SQL=DEBUG
+```
+
+Run with development profile:
+```bash
+java -jar your-app.jar --spring.profiles.active=dev
+```
+
+## Environment Variables Setup
+
+### Option 1: IDE Configuration
+Set environment variables in your IDE's run configuration.
+
+### Option 2: Command Line
+```bash
+export DB_NAME=your_database_name
+export DB_USERNAME=your_db_user
+export DB_PASSWORD=your_secure_password
+java -jar your-application.jar
+```
+
+### Option 3: Using .env with Spring Boot
+Add to your `build.gradle` or `pom.xml` a dependency for dotenv:
+
+**Gradle:**
+```gradle
+implementation 'me.paulschwarz:spring-dotenv:2.5.4'
+```
+
+**Maven:**
+```xml
+<dependency>
+    <groupId>me.paulschwarz</groupId>
+    <artifactId>spring-dotenv</artifactId>
+    <version>2.5.4</version>
+</dependency>
+```
+
+## Security Best Practices
+
+1. **Never commit credentials** to version control
+2. **Add `.env` to `.gitignore`**
+3. **Use different credentials** for each environment (dev, staging, prod)
+4. **Use strong passwords** with a mix of characters
+5. **Rotate passwords regularly** in production environments
+6. **Use connection pooling** for production applications
+7. **Consider using Spring Profiles** for different environments
+
+## Example .gitignore Entry
+
+```gitignore
+# Environment variables
+.env
+*.env
+
+# Application properties with sensitive data
+application-*.properties
+!application.properties
+```
+
+## Troubleshooting
+
+- **Connection refused**: Check if PostgreSQL is running and the host/port are correct
+- **Authentication failed**: Verify username and password
+- **Database does not exist**: Ensure the database was created successfully
+- **Permission denied**: Check that the user has the necessary privileges
+
+After completing these steps, your Spring Boot application should be able to connect to the PostgreSQL database securely without exposing sensitive information in your codebase.
+
+--
+
+### Content
+
 # Developer Readme: Database Setup (PostgreSQL)
 
 This document outlines the steps to set up the PostgreSQL database for local development of the Riot API Spring application.
@@ -86,4 +292,6 @@ This document outlines the steps to set up the PostgreSQL database for local dev
     spring.jpa.show-sql=true
     ```
 
-After completing these steps and ensuring your entity classes are correctly annotated (`@Entity`, `@Id`), your Spring Boot application should be able to connect to the PostgreSQL database and automatically create/update the schema when it starts. 
+After completing these steps and ensuring your entity classes are correctly annotated (`@Entity`, `@Id`), your Spring Boot application should be able to connect to the PostgreSQL database and automatically create/update the schema when it starts.
+
+Mach das README besser, so dass datenbank usw nicht geleaked wird weiß du
