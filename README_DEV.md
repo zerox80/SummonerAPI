@@ -1,18 +1,3 @@
-# # Developer Readme: Datab
-
---
-
-### Reasoning
-
-The user wants me to improve this README so that sensitive database information (like usernames, passwords, database names) is not leaked/exposed. This is a good security practice. I should:
-
-1. Use environment variables or placeholders instead of hardcoded credentials
-2. Add a section about security best practices
-3. Use generic examples instead of the specific credentials shown
-4. Add instructions on how to use environment variables
-5. Maybe add a .env file example
-6. Emphasize not to commit sensitive data to version control
-
 ### Content
 
 # Developer Readme: Database Setup (PostgreSQL)
