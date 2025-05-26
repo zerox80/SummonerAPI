@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Riot API Summoner Profile</title>
+    <!-- Preconnect to CDNs -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <!-- Bootstrap CSS -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"></noscript>
@@ -56,17 +59,17 @@
                     <div class="d-flex w-100 justify-content-between mb-2">
                         <h4 class="mb-1">
                             <th:block th:switch="${entry.tier}">
-                                <img th:case="'CHALLENGER'" th:src="@{/ui/images/tiers/challenger.png}" alt="Challenger Tier" class="tier-icon"/>
-                                <img th:case="'GRANDMASTER'" th:src="@{/ui/images/tiers/grandmaster.png}" alt="Grandmaster Tier" class="tier-icon"/>
-                                <img th:case="'MASTER'" th:src="@{/ui/images/tiers/master.png}" alt="Master Tier" class="tier-icon"/>
-                                <img th:case="'DIAMOND'" th:src="@{/ui/images/tiers/diamond.png}" alt="Diamond Tier" class="tier-icon"/>
-                                <img th:case="'EMERALD'" th:src="@{/ui/images/tiers/emerald.png}" alt="Emerald Tier" class="tier-icon"/>
-                                <img th:case="'PLATINUM'" th:src="@{/ui/images/tiers/platin.png}" alt="Platinum Tier" class="tier-icon"/>
-                                <img th:case="'GOLD'" th:src="@{/ui/images/tiers/gold.png}" alt="Gold Tier" class="tier-icon"/>
-                                <img th:case="'SILVER'" th:src="@{/ui/images/tiers/silver.png}" alt="Silver Tier" class="tier-icon"/>
-                                <img th:case="'BRONZE'" th:src="@{/ui/images/tiers/bronze.png}" alt="Bronze Tier" class="tier-icon"/>
-                                <img th:case="'IRON'" th:src="@{/ui/images/tiers/iron.png}" alt="Iron Tier" class="tier-icon"/>
-                                <img th:case="*" th:src="@{/ui/images/tiers/default.png}" alt="Unranked or unknown tier" class="tier-icon"/>
+                                <img th:case="'CHALLENGER'" th:src="@{/ui/images/tiers/challenger.png}" alt="Challenger Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'GRANDMASTER'" th:src="@{/ui/images/tiers/grandmaster.png}" alt="Grandmaster Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'MASTER'" th:src="@{/ui/images/tiers/master.png}" alt="Master Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'DIAMOND'" th:src="@{/ui/images/tiers/diamond.png}" alt="Diamond Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'EMERALD'" th:src="@{/ui/images/tiers/emerald.png}" alt="Emerald Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'PLATINUM'" th:src="@{/ui/images/tiers/platin.png}" alt="Platinum Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'GOLD'" th:src="@{/ui/images/tiers/gold.png}" alt="Gold Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'SILVER'" th:src="@{/ui/images/tiers/silver.png}" alt="Silver Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'BRONZE'" th:src="@{/ui/images/tiers/bronze.png}" alt="Bronze Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="'IRON'" th:src="@{/ui/images/tiers/iron.png}" alt="Iron Tier" class="tier-icon" loading="lazy"/>
+                                <img th:case="*" th:src="@{/ui/images/tiers/default.png}" alt="Unranked or unknown tier" class="tier-icon" loading="lazy"/>
                             </th:block>
                             <span th:text="${entry.queueType != null ? entry.queueType.replace('_', ' ').toLowerCase() : 'N/A'}" class="text-capitalize">Queue</span>
                         </h4>
@@ -96,6 +99,7 @@
                              th:alt="${champEntry.key}"
                              class="me-2 rounded"
                              style="width: 32px; height: 32px; object-fit: cover;"
+                             loading="lazy"
                              onerror="this.style.display='none'; var fallbackText = document.createElement('span'); fallbackText.className='text-muted small me-2'; fallbackText.textContent=this.alt + ' (image not found)'; this.parentNode.insertBefore(fallbackText, this);"/>
                         <span th:text="${champEntry.key}" class="fw-bold">ChampionName</span>
                         <span class="text-muted mx-2">-</span>
@@ -158,7 +162,7 @@
                     <!-- Searched Summoner's Performance -->
                     <div th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
                         <strong>Your Performance:</strong>
-                        <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded"
+                        <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded" loading="lazy"
                              onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
                         <span th:text="${p.championName}" class="fw-medium">Champ</span> -
                         KDA: <span th:text="${p.kda}" class="fw-bold">K/D/A</span>
@@ -182,7 +186,7 @@
                             <tr th:each="p : ${match.info.participants}" th:if="${p.teamId == 100}"
                                 th:classappend="${p.puuid == searchedPuuid ? 'table-info' : ''}">
                                 <td>
-                                    <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded"
+                                    <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded" loading="lazy"
                                          onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
                                     <span th:text="${p.championName}">Champion</span>
                                 </td>
@@ -213,7 +217,7 @@
                             <tr th:each="p : ${match.info.participants}" th:if="${p.teamId == 200}"
                                 th:classappend="${p.puuid == searchedPuuid ? 'table-info' : ''}">
                                 <td>
-                                    <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded"
+                                    <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="24" height="24" class="me-1 align-middle rounded" loading="lazy"
                                          onerror="this.style.display='none'; var s = this.nextElementSibling; if (s) s.textContent = this.alt; else console.error('Fallback-Span für Champion nicht gefunden');"/>
                                     <span th:text="${p.championName}">Champion</span>
                                 </td>
