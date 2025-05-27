@@ -24,6 +24,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
+import java.util.Optional;
+import com.google.common.collect.Lists;
 
 @Service
 public class RiotApiService {
@@ -31,15 +33,17 @@ public class RiotApiService {
     private static final Logger logger = LoggerFactory.getLogger(RiotApiService.class);
     private final RiotApiClient riotApiClient;
     private final PlayerLpRecordService playerLpRecordService;
+    private final PlayerLpRecordRepository playerLpRecordRepository;
 
     @Autowired
     public RiotApiService(RiotApiClient riotApiClient,
-                          PlayerLpRecordService playerLpRecordService) {
+                          PlayerLpRecordService playerLpRecordService,
+                          PlayerLpRecordRepository playerLpRecordRepository) {
         this.riotApiClient = riotApiClient;
         this.playerLpRecordService = playerLpRecordService;
+        this.playerLpRecordRepository = playerLpRecordRepository;
     }
 
-    @Cacheable(value = "summoners", key = "#gameName.toLowerCase() + '#' + #tagLine.toLowerCase()")
     public CompletableFuture<Summoner> getSummonerByRiotId(String gameName, String tagLine) {
         if (!StringUtils.hasText(gameName) || !StringUtils.hasText(tagLine)) {
             logger.error("Fehler: Spielname und Tagline dürfen nicht leer sein.");
@@ -113,28 +117,45 @@ public class RiotApiService {
                         logger.info("No match IDs found for PUUID: {}", puuid);
                         return CompletableFuture.completedFuture(Collections.<MatchV5Dto>emptyList());
                     }
-                    logger.info("Fetching details for {} matches...", matchIds.size());
+                    logger.info("Fetching details for {} matches in batches...", matchIds.size());
 
-                    List<CompletableFuture<MatchV5Dto>> matchDetailFutures = new ArrayList<>(matchIds.size());
-                    for (String matchId : matchIds) {
-                        matchDetailFutures.add(
-                            riotApiClient.getMatchDetails(matchId)
-                                .exceptionally(ex -> {
-                                    logger.error("Error fetching details for match ID {}: {}", matchId, ex.getMessage());
-                                    return null;
+                    // Batch-Processing mit Rate Limiting
+                    List<List<String>> batches = Lists.partition(matchIds, 5); // 5 parallel requests per batch, but batches processed sequentially by reduce
+
+                    return batches.stream()
+                        .map(this::fetchMatchBatch) // Assuming fetchMatchBatch handles its own errors and returns CompletableFuture<List<MatchV5Dto>>
+                        .reduce(CompletableFuture.completedFuture(new ArrayList<MatchV5Dto>()),
+                            (accFuture, batchFuture) -> accFuture.thenCompose(list ->
+                                batchFuture.thenApply(batchResult -> {
+                                    if (batchResult != null) { // Ensure batchResult is not null before adding
+                                        list.addAll(batchResult.stream().filter(java.util.Objects::nonNull).collect(Collectors.toList()));
+                                    }
+                                    return list;
                                 })
+                            )
                         );
-                    }
-
-                    return CompletableFuture.allOf(matchDetailFutures.toArray(new CompletableFuture[0]))
-                            .thenApply(v -> matchDetailFutures.stream()
-                                    .map(CompletableFuture::join)
-                                    .filter(java.util.Objects::nonNull)
-                                    .collect(Collectors.toList()));
                 }).exceptionally(ex -> {
                     logger.error("Error fetching match history for puuid {}: {}", puuid, ex.getMessage(), ex);
                     return Collections.emptyList();
                 });
+    }
+
+    // Helper method to fetch a batch of matches
+    // This method should handle errors for individual calls if necessary
+    private CompletableFuture<List<MatchV5Dto>> fetchMatchBatch(List<String> matchIdBatch) {
+        List<CompletableFuture<MatchV5Dto>> matchDetailFutures = matchIdBatch.stream()
+            .map(matchId -> riotApiClient.getMatchDetails(matchId)
+                .exceptionally(ex -> {
+                    logger.error("Error fetching details for match ID {}: {}", matchId, ex.getMessage());
+                    return null; // Return null on error to allow other successful calls in the batch to proceed
+                }))
+            .collect(Collectors.toList());
+
+        return CompletableFuture.allOf(matchDetailFutures.toArray(new CompletableFuture[0]))
+            .thenApply(v -> matchDetailFutures.stream()
+                .map(CompletableFuture::join)
+                .filter(java.util.Objects::nonNull) // Filter out nulls resulting from errors
+                .collect(Collectors.toList()));
     }
 
     public Map<String, Long> getChampionPlayCounts(List<MatchV5Dto> matches, String searchedPuuid) {
@@ -171,4 +192,102 @@ public class RiotApiService {
                 .collect(Collectors.toList());
     }
 
+    public CompletableFuture<SummonerProfileData> getSummonerProfileDataAsync(String gameName, String tagLine) {
+        return getSummonerByRiotId(gameName, tagLine)
+                .thenCompose(summoner -> {
+                    if (summoner == null || !StringUtils.hasText(summoner.getPuuid())) {
+                        logger.warn("Summoner not found or PUUID is missing for {}#{}", gameName, tagLine);
+                        return CompletableFuture.completedFuture(new SummonerProfileData("Summoner not found or PUUID missing."));
+                    }
+
+                    String displayRiotId = summoner.getName() + "#" + tagLine;
+                    String iconUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/" + summoner.getProfileIconId() + ".jpg";
+                    SummonerSuggestionDTO suggestionDTO = new SummonerSuggestionDTO(displayRiotId, summoner.getProfileIconId(), summoner.getSummonerLevel(), iconUrl);
+
+                    CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = getLeagueEntriesBySummonerId(summoner.getId(), summoner.getPuuid());
+                    CompletableFuture<List<MatchV5Dto>> matchHistoryFuture = getMatchHistory(summoner.getPuuid(), 20);
+
+                    return CompletableFuture.allOf(leagueEntriesFuture, matchHistoryFuture)
+                            .thenApply(v -> {
+                                List<LeagueEntryDTO> leagueEntries = leagueEntriesFuture.join();
+                                List<MatchV5Dto> matchHistory = matchHistoryFuture.join();
+
+                                calculateAndSetLpChanges(summoner, matchHistory);
+
+                                Map<String, Long> championPlayCounts = getChampionPlayCounts(matchHistory, summoner.getPuuid());
+
+                                return new SummonerProfileData(summoner, leagueEntries, matchHistory, suggestionDTO, championPlayCounts);
+                            });
+                })
+                .exceptionally(ex -> {
+                    logger.error("Error building summoner profile data for {}#{}: {}", gameName, tagLine, ex.getMessage(), ex);
+                    return new SummonerProfileData("An error occurred while fetching summoner profile data: " + ex.getMessage());
+                });
+    }
+
+    private void calculateAndSetLpChanges(Summoner summoner, List<MatchV5Dto> matchHistory) {
+        if (summoner == null || !StringUtils.hasText(summoner.getPuuid()) || matchHistory == null || matchHistory.isEmpty()) {
+            return;
+        }
+
+        for (MatchV5Dto match : matchHistory) {
+            if (match.getInfo() == null) continue;
+
+            int queueId = match.getInfo().getQueueId();
+            String queueTypeForDbQuery;
+            if (queueId == 420) {
+                queueTypeForDbQuery = "RANKED_SOLO_5x5";
+            } else if (queueId == 440) {
+                queueTypeForDbQuery = "RANKED_FLEX_SR";
+            } else {
+                continue;
+            }
+
+            Instant matchEndTime = Instant.ofEpochMilli(match.getInfo().getGameEndTimestamp());
+
+            try {
+                Optional<PlayerLpRecord> recordBeforeOpt = playerLpRecordRepository
+                        .findFirstByPuuidAndQueueTypeAndTimestampBeforeOrderByTimestampDesc(
+                                summoner.getPuuid(), queueTypeForDbQuery, matchEndTime);
+
+                Optional<PlayerLpRecord> recordAfterOpt = playerLpRecordRepository
+                        .findFirstByPuuidAndQueueTypeAndTimestampGreaterThanEqualOrderByTimestampAsc(
+                                summoner.getPuuid(), queueTypeForDbQuery, matchEndTime);
+
+                if (recordBeforeOpt.isPresent() && recordAfterOpt.isPresent()) {
+                    PlayerLpRecord recordBefore = recordBeforeOpt.get();
+                    PlayerLpRecord recordAfter = recordAfterOpt.get();
+
+                    if (recordAfter.getTimestamp().isAfter(recordBefore.getTimestamp()) || recordAfter.getTimestamp().equals(recordBefore.getTimestamp())) {
+                        if (recordAfter.getTimestamp().equals(matchEndTime) || recordAfter.getTimestamp().isAfter(matchEndTime)) {
+                            int lpBefore = recordBefore.getLeaguePoints();
+                            int lpAfter = recordAfter.getLeaguePoints();
+                            int lpChange = lpAfter - lpBefore;
+
+                            if (!recordBefore.getTier().equals(recordAfter.getTier()) || !recordBefore.getRank().equals(recordAfter.getRank())) {
+                                logger.warn("Tier/Rank changed for match {}. PUUID: {}. Before: {} {} {} LP, After: {} {} {} LP. LP Change calculation might be inaccurate or represent promotion/demotion.",
+                                        match.getMetadata().getMatchId(), summoner.getPuuid(),
+                                        recordBefore.getTier(), recordBefore.getRank(), recordBefore.getLeaguePoints(),
+                                        recordAfter.getTier(), recordAfter.getRank(), recordAfter.getLeaguePoints());
+                                match.getInfo().setLpChange(null);
+                            } else {
+                                match.getInfo().setLpChange(lpChange);
+                            }
+                        } else {
+                             logger.debug("LP record 'after' match {} for PUUID {} (queue {}) has timestamp {} which is before match end time {}. Skipping LP calculation for this record pair.",
+                                    match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery, recordAfter.getTimestamp(), matchEndTime);
+                        }
+                    } else {
+                         logger.debug("LP record 'before' match {} for PUUID {} (queue {}) has timestamp {} which is after 'after' record timestamp {}. Skipping LP calculation for this record pair.",
+                                    match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery, recordBefore.getTimestamp(), recordAfter.getTimestamp());
+                    }
+                } else {
+                    logger.debug("LP records before or after match {} not found for PUUID {} and queue {}. Cannot calculate LP change.",
+                            match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery);
+                }
+            } catch (Exception e) {
+                logger.error("Error calculating LP change for match {} PUUID {}: {}", match.getMetadata().getMatchId(), summoner.getPuuid(), e.getMessage(), e);
+            }
+        }
+    }
 }
