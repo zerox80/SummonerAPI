@@ -15,10 +15,6 @@ public class RiotApiApplication {
         SpringApplication.run(RiotApiApplication.class, args);
     }
 
-    // =================================================================
-    // DIESER CODE-BLOCK IST NEU - UNSER "SPION"
-    // Er liest das Passwort, das die App WIRKLICH benutzt, und druckt es aus.
-    // =================================================================
     @Bean
     public CommandLineRunner commandLineRunner(@Value("${spring.datasource.password}") String password) {
         return args -> {
