@@ -135,10 +135,13 @@ public class RiotApiClient {
         return sendApiRequestAsync(url, Summoner.class, "Summoner");
     }
 
-    @Cacheable(value = "leagueEntries", key = "#encryptedSummonerId")
-    public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntriesBySummonerId(String encryptedSummonerId) {
+    // =====================================================================
+    // NEUE, KORRIGIERTE METHODE FÜR DIE RANGLISTE
+    // =====================================================================
+    @Cacheable(value = "leagueEntries", key = "#puuid")
+    public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntriesByPuuid(String puuid) {
         String host = this.platformRegion + ".api.riotgames.com";
-        String path = "/lol/league/v4/entries/by-summoner/" + encryptedSummonerId;
+        String path = "/lol/league/v4/entries/by-puuid/" + puuid;
         String url = "https://" + host + path;
         logger.debug(">>> RiotApiClient (LeagueEntries): Requesting URL: [{}]", url);
         return sendApiRequestAsyncForList(url, LEAGUE_LIST_TYPE, "LeagueEntries");

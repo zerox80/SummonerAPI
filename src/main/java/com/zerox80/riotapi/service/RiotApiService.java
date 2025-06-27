@@ -77,24 +77,24 @@ public class RiotApiService {
                 });
     }
 
-    @Cacheable(value = "leagueEntries", key = "#encryptedSummonerId")
-    public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntriesBySummonerId(String encryptedSummonerId, String puuidForRecord) {
-        if (!StringUtils.hasText(encryptedSummonerId)) {
-            logger.error("Fehler: encryptedSummonerId darf nicht leer sein.");
+    // KORREKTUR: Diese Methode benutzt jetzt die neue API-Funktion
+    public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntries(String puuid) {
+        if (!StringUtils.hasText(puuid)) {
+            logger.error("Fehler: PUUID darf nicht leer sein.");
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        logger.info("Suche nach League Entries für Summoner ID: {}...", encryptedSummonerId);
-        CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = riotApiClient.getLeagueEntriesBySummonerId(encryptedSummonerId);
+        logger.info("Suche nach League Entries für PUUID: {}...", puuid);
+        CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = riotApiClient.getLeagueEntriesByPuuid(puuid);
 
         return leagueEntriesFuture.thenCompose(leagueEntries -> {
-            if (leagueEntries != null && !leagueEntries.isEmpty() && StringUtils.hasText(puuidForRecord)) {
-                return playerLpRecordService.savePlayerLpRecordsAsync(puuidForRecord, leagueEntries)
+            if (leagueEntries != null && !leagueEntries.isEmpty()) {
+                return playerLpRecordService.savePlayerLpRecordsAsync(puuid, leagueEntries)
                          .thenApply(v -> leagueEntries);
             } else {
                 return CompletableFuture.completedFuture(leagueEntries);
             }
         }).exceptionally(ex -> {
-            logger.error("Error fetching or processing league entries for summonerId {}: {}", encryptedSummonerId, ex.getMessage(), ex);
+            logger.error("Error fetching or processing league entries for puuid {}: {}", puuid, ex.getMessage(), ex);
             return Collections.emptyList();
         });
     }
@@ -119,15 +119,14 @@ public class RiotApiService {
                     }
                     logger.info("Fetching details for {} matches in batches...", matchIds.size());
 
-                    // Batch-Processing mit Rate Limiting
-                    List<List<String>> batches = Lists.partition(matchIds, 5); // 5 parallel requests per batch, but batches processed sequentially by reduce
+                    List<List<String>> batches = Lists.partition(matchIds, 5);
 
                     return batches.stream()
-                        .map(this::fetchMatchBatch) // Assuming fetchMatchBatch handles its own errors and returns CompletableFuture<List<MatchV5Dto>>
+                        .map(this::fetchMatchBatch)
                         .reduce(CompletableFuture.completedFuture(new ArrayList<MatchV5Dto>()),
                             (accFuture, batchFuture) -> accFuture.thenCompose(list ->
                                 batchFuture.thenApply(batchResult -> {
-                                    if (batchResult != null) { // Ensure batchResult is not null before adding
+                                    if (batchResult != null) {
                                         list.addAll(batchResult.stream().filter(java.util.Objects::nonNull).collect(Collectors.toList()));
                                     }
                                     return list;
@@ -140,21 +139,19 @@ public class RiotApiService {
                 });
     }
 
-    // Helper method to fetch a batch of matches
-    // This method should handle errors for individual calls if necessary
     private CompletableFuture<List<MatchV5Dto>> fetchMatchBatch(List<String> matchIdBatch) {
         List<CompletableFuture<MatchV5Dto>> matchDetailFutures = matchIdBatch.stream()
             .map(matchId -> riotApiClient.getMatchDetails(matchId)
                 .exceptionally(ex -> {
                     logger.error("Error fetching details for match ID {}: {}", matchId, ex.getMessage());
-                    return null; // Return null on error to allow other successful calls in the batch to proceed
+                    return null;
                 }))
             .collect(Collectors.toList());
 
         return CompletableFuture.allOf(matchDetailFutures.toArray(new CompletableFuture[0]))
             .thenApply(v -> matchDetailFutures.stream()
                 .map(CompletableFuture::join)
-                .filter(java.util.Objects::nonNull) // Filter out nulls resulting from errors
+                .filter(java.util.Objects::nonNull)
                 .collect(Collectors.toList()));
     }
 
@@ -204,8 +201,12 @@ public class RiotApiService {
                     String iconUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/" + summoner.getProfileIconId() + ".jpg";
                     SummonerSuggestionDTO suggestionDTO = new SummonerSuggestionDTO(displayRiotId, summoner.getProfileIconId(), summoner.getSummonerLevel(), iconUrl);
 
-                    CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = getLeagueEntriesBySummonerId(summoner.getId(), summoner.getPuuid());
-                    CompletableFuture<List<MatchV5Dto>> matchHistoryFuture = getMatchHistory(summoner.getPuuid(), 20);
+                    // ===================================================================================
+                    // KORREKTUR: Ruft jetzt die neue Methode mit PUUID auf
+                    // ===================================================================================
+                    CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = getLeagueEntries(summoner.getPuuid());
+                    
+                    CompletableFuture<List<MatchV5Dto>> matchHistoryFuture = getMatchHistory(summoner.getPuuid(), 5);
 
                     return CompletableFuture.allOf(leagueEntriesFuture, matchHistoryFuture)
                             .thenApply(v -> {
