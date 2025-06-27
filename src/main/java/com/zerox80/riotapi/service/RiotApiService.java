@@ -77,7 +77,6 @@ public class RiotApiService {
                 });
     }
 
-    // KORREKTUR: Diese Methode benutzt jetzt die neue API-Funktion
     public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntries(String puuid) {
         if (!StringUtils.hasText(puuid)) {
             logger.error("Fehler: PUUID darf nicht leer sein.");
