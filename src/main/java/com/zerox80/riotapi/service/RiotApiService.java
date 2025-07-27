@@ -87,7 +87,8 @@ public class RiotApiService {
 
         return leagueEntriesFuture.thenCompose(leagueEntries -> {
             if (leagueEntries != null && !leagueEntries.isEmpty()) {
-                return playerLpRecordService.savePlayerLpRecordsAsync(puuid, leagueEntries)
+                Instant now = Instant.now();
+                return playerLpRecordService.savePlayerLpRecordsAsync(puuid, leagueEntries, now)
                          .thenApply(v -> leagueEntries);
             } else {
                 return CompletableFuture.completedFuture(leagueEntries);
@@ -258,28 +259,24 @@ public class RiotApiService {
                     PlayerLpRecord recordBefore = recordBeforeOpt.get();
                     PlayerLpRecord recordAfter = recordAfterOpt.get();
 
-                    if (recordAfter.getTimestamp().isAfter(recordBefore.getTimestamp()) || recordAfter.getTimestamp().equals(recordBefore.getTimestamp())) {
-                        if (recordAfter.getTimestamp().equals(matchEndTime) || recordAfter.getTimestamp().isAfter(matchEndTime)) {
-                            int lpBefore = recordBefore.getLeaguePoints();
-                            int lpAfter = recordAfter.getLeaguePoints();
-                            int lpChange = lpAfter - lpBefore;
+                    if (recordAfter.getTimestamp().isBefore(matchEndTime)) {
+                        logger.debug("LP record after match {} for PUUID {} (queue {}) occurs before match end time {}.",
+                                match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery, matchEndTime);
+                        continue;
+                    }
 
-                            if (!recordBefore.getTier().equals(recordAfter.getTier()) || !recordBefore.getRank().equals(recordAfter.getRank())) {
-                                logger.warn("Tier/Rank changed for match {}. PUUID: {}. Before: {} {} {} LP, After: {} {} {} LP. LP Change calculation might be inaccurate or represent promotion/demotion.",
-                                        match.getMetadata().getMatchId(), summoner.getPuuid(),
-                                        recordBefore.getTier(), recordBefore.getRank(), recordBefore.getLeaguePoints(),
-                                        recordAfter.getTier(), recordAfter.getRank(), recordAfter.getLeaguePoints());
-                                match.getInfo().setLpChange(null);
-                            } else {
-                                match.getInfo().setLpChange(lpChange);
-                            }
-                        } else {
-                             logger.debug("LP record 'after' match {} for PUUID {} (queue {}) has timestamp {} which is before match end time {}. Skipping LP calculation for this record pair.",
-                                    match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery, recordAfter.getTimestamp(), matchEndTime);
-                        }
+                    int lpBefore = recordBefore.getLeaguePoints();
+                    int lpAfter = recordAfter.getLeaguePoints();
+                    int lpChange = lpAfter - lpBefore;
+
+                    if (!recordBefore.getTier().equals(recordAfter.getTier()) || !recordBefore.getRank().equals(recordAfter.getRank())) {
+                        logger.warn("Tier/Rank changed for match {}. PUUID: {}. Before: {} {} {} LP, After: {} {} {} LP. LP Change calculation might be inaccurate or represent promotion/demotion.",
+                                match.getMetadata().getMatchId(), summoner.getPuuid(),
+                                recordBefore.getTier(), recordBefore.getRank(), recordBefore.getLeaguePoints(),
+                                recordAfter.getTier(), recordAfter.getRank(), recordAfter.getLeaguePoints());
+                        match.getInfo().setLpChange(null);
                     } else {
-                         logger.debug("LP record 'before' match {} for PUUID {} (queue {}) has timestamp {} which is after 'after' record timestamp {}. Skipping LP calculation for this record pair.",
-                                    match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery, recordBefore.getTimestamp(), recordAfter.getTimestamp());
+                        match.getInfo().setLpChange(lpChange);
                     }
                 } else {
                     logger.debug("LP records before or after match {} not found for PUUID {} and queue {}. Cannot calculate LP change.",
