@@ -9,19 +9,20 @@ public record SummonerProfileData(
     List<MatchV5Dto> matchHistory,
     SummonerSuggestionDTO suggestion,
     Map<String, Long> championPlayCounts,
-    String errorMessage // Optional: um Fehlerdetails vom Service zum Controller zu transportieren
+    String profileIconUrl,
+    String errorMessage // Optional: to transport error details from service to controller
 ) {
-    // Konstruktor für den Erfolgsfall
-    public SummonerProfileData(Summoner summoner, List<LeagueEntryDTO> leagueEntries, List<MatchV5Dto> matchHistory, SummonerSuggestionDTO suggestion, Map<String, Long> championPlayCounts) {
-        this(summoner, leagueEntries, matchHistory, suggestion, championPlayCounts, null);
+    // Constructor for success case
+    public SummonerProfileData(Summoner summoner, List<LeagueEntryDTO> leagueEntries, List<MatchV5Dto> matchHistory, SummonerSuggestionDTO suggestion, Map<String, Long> championPlayCounts, String profileIconUrl) {
+        this(summoner, leagueEntries, matchHistory, suggestion, championPlayCounts, profileIconUrl, null);
     }
 
-    // Konstruktor für den Fehlerfall
+    // Constructor for error case
     public SummonerProfileData(String errorMessage) {
-        this(null, List.of(), List.of(), null, Map.of(), errorMessage);
+        this(null, List.of(), List.of(), null, Map.of(), null, errorMessage);
     }
 
     public boolean hasError() {
         return errorMessage != null && !errorMessage.isEmpty();
     }
-} 
+}

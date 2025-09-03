@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 import java.util.Optional;
-import com.google.common.collect.Lists;
+import com.zerox80.riotapi.util.ListUtils;
 
 @Service
 public class RiotApiService {
@@ -42,15 +42,15 @@ public class RiotApiService {
 
     public CompletableFuture<Summoner> getSummonerByRiotId(String gameName, String tagLine) {
         if (!StringUtils.hasText(gameName) || !StringUtils.hasText(tagLine)) {
-            logger.error("Fehler: Spielname und Tagline dürfen nicht leer sein.");
+            logger.error("Error: Game name and tag line cannot be empty.");
             return CompletableFuture.completedFuture(null);
         }
 
-        logger.info("Suche nach Account: {}#{}...", gameName, tagLine);
+        logger.info("Searching for account: {}#{}...", gameName, tagLine);
         return riotApiClient.getAccountByRiotId(gameName, tagLine)
                 .thenCompose(account -> {
                     if (account != null && StringUtils.hasText(account.getPuuid())) {
-                        logger.info("Account gefunden, PUUID: {}. Suche nach Beschwörerdaten...", account.getPuuid());
+                        logger.info("Account found, PUUID: {}. Fetching summoner data...", account.getPuuid());
                         return riotApiClient.getSummonerByPuuid(account.getPuuid())
                                 .thenApply(summoner -> {
                                     if (summoner != null) {
@@ -64,7 +64,7 @@ public class RiotApiService {
                                     return summoner;
                                 });
                     } else {
-                        logger.info("Account für {}#{} nicht gefunden oder PUUID fehlt.", gameName, tagLine);
+                        logger.info("Account for {}#{} not found or PUUID is missing.", gameName, tagLine);
                         return CompletableFuture.completedFuture(null);
                     }
                 }).exceptionally(ex -> {
@@ -75,10 +75,10 @@ public class RiotApiService {
 
     public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntries(String puuid) {
         if (!StringUtils.hasText(puuid)) {
-            logger.error("Fehler: PUUID darf nicht leer sein.");
+            logger.error("Error: PUUID cannot be empty.");
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        logger.info("Suche nach League Entries für PUUID: {}...", puuid);
+        logger.info("Fetching league entries for PUUID: {}...", puuid);
         CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = riotApiClient.getLeagueEntriesByPuuid(puuid);
 
         return leagueEntriesFuture.thenApply(leagueEntries -> {
@@ -113,7 +113,7 @@ public class RiotApiService {
                     }
                     logger.info("Fetching details for {} matches in batches...", matchIds.size());
 
-                    List<List<String>> batches = Lists.partition(matchIds, 5);
+                    List<List<String>> batches = ListUtils.partition(matchIds, 5);
 
                     return batches.stream()
                         .map(this::fetchMatchBatch)
@@ -192,14 +192,11 @@ public class RiotApiService {
                     }
 
                     String displayRiotId = summoner.getName() + "#" + tagLine;
-                    String iconUrl = "https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/v1/profile-icons/" + summoner.getProfileIconId() + ".jpg";
-                    SummonerSuggestionDTO suggestionDTO = new SummonerSuggestionDTO(displayRiotId, summoner.getProfileIconId(), summoner.getSummonerLevel(), iconUrl);
+                    String iconUrl = riotApiClient.getProfileIconUrl(summoner.getProfileIconId());
+                    SummonerSuggestionDTO suggestionDTO = new SummonerSuggestionDTO(displayRiotId, summoner.getProfileIconId(), summoner.getSummonerLevel());
 
-                    // ===================================================================================
-                    // KORREKTUR: Ruft jetzt die neue Methode mit PUUID auf
-                    // ===================================================================================
+                    // Fetch league entries and match history concurrently
                     CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = getLeagueEntries(summoner.getPuuid());
-                    
                     CompletableFuture<List<MatchV5Dto>> matchHistoryFuture = getMatchHistory(summoner.getPuuid(), 5);
 
                     return CompletableFuture.allOf(leagueEntriesFuture, matchHistoryFuture)
@@ -211,7 +208,7 @@ public class RiotApiService {
 
                                 Map<String, Long> championPlayCounts = getChampionPlayCounts(matchHistory, summoner.getPuuid());
 
-                                return new SummonerProfileData(summoner, leagueEntries, matchHistory, suggestionDTO, championPlayCounts);
+                                return new SummonerProfileData(summoner, leagueEntries, matchHistory, suggestionDTO, championPlayCounts, iconUrl);
                             });
                 })
                 .exceptionally(ex -> {

@@ -11,5 +11,4 @@ public class SummonerSuggestionDTO {
     private String riotId;
     private int profileIconId;
     private long summonerLevel;
-    private String profileIconUrl;
 } 

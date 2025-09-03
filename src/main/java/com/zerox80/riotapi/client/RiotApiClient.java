@@ -1,25 +1,27 @@
 package com.zerox80.riotapi.client;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zerox80.riotapi.model.AccountDto;
-import com.zerox80.riotapi.model.Summoner;
 import com.zerox80.riotapi.model.LeagueEntryDTO;
 import com.zerox80.riotapi.model.MatchV5Dto;
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
+import com.zerox80.riotapi.model.Summoner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -34,23 +36,32 @@ public class RiotApiClient {
     private final String platformRegion;
     private final String regionalRoute;
     private final HttpClient httpClient;
-    private final Gson gson;
+    private final ObjectMapper objectMapper;
+    private final String communityDragonUrl;
 
-    private static final Type LEAGUE_LIST_TYPE = new TypeToken<List<LeagueEntryDTO>>() {}.getType();
-    private static final Type MATCH_ID_LIST_TYPE = new TypeToken<List<String>>() {}.getType();
+    private static final TypeReference<List<LeagueEntryDTO>> LEAGUE_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<List<String>> MATCH_ID_LIST_TYPE = new TypeReference<>() {};
 
-    public RiotApiClient(@Value("${riot.api.key}") String apiKey, 
-                         @Value("${riot.api.region}") String platformRegion) {
+    @Autowired
+    public RiotApiClient(@Value("${riot.api.key}") String apiKey,
+                         @Value("${riot.api.region}") String platformRegion,
+                         @Value("${riot.api.community-dragon.url}") String communityDragonUrl,
+                         ObjectMapper objectMapper) {
         this.apiKey = apiKey;
         this.platformRegion = platformRegion.toLowerCase();
         this.regionalRoute = determineRegionalRoute(this.platformRegion);
+        this.communityDragonUrl = communityDragonUrl;
+        this.objectMapper = objectMapper;
         ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
                 .connectTimeout(Duration.ofSeconds(10))
                 .executor(virtualThreadExecutor)
                 .build();
-        this.gson = new Gson();
+    }
+
+    public String getProfileIconUrl(int iconId) {
+        return communityDragonUrl + "/" + iconId + ".jpg";
     }
 
     private String determineRegionalRoute(String platform) {
@@ -70,45 +81,52 @@ public class RiotApiClient {
     }
 
     private <T> CompletableFuture<T> sendApiRequestAsync(String url, Class<T> responseClass, String requestType) {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .header("X-Riot-Token", this.apiKey)
-                .timeout(Duration.ofSeconds(15))
-                .build();
-
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
-                    if (response.statusCode() == 200) {
-                        return gson.fromJson(response.body(), responseClass);
-                    } else if (response.statusCode() == 404) {
-                        logger.warn("API Request ({}) to URL '{}' returned 404 Not Found.", requestType, url);
-                        return null;
-                    } else {
-                        logger.error("API Request Failed ({}): {} - {} for URL: {}", requestType, response.statusCode(), response.body(), url);
-                        throw new RuntimeException("API request (" + requestType + ") failed with status code: " + response.statusCode() + "; Body: " + response.body());
-                    }
-                });
+        return sendRequest(url, requestType).thenApply(response -> parseResponse(response, responseClass, requestType, url));
     }
 
-    private <T> CompletableFuture<List<T>> sendApiRequestAsyncForList(String url, Type listType, String requestType) {
+    private <T> CompletableFuture<T> sendApiRequestAsync(String url, TypeReference<T> typeReference, String requestType) {
+        return sendRequest(url, requestType).thenApply(response -> parseResponse(response, typeReference, requestType, url));
+    }
+
+    private CompletableFuture<HttpResponse<String>> sendRequest(String url, String requestType) {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(url))
                 .header("X-Riot-Token", this.apiKey)
                 .timeout(Duration.ofSeconds(15))
                 .build();
+        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString());
+    }
 
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> {
-                    if (response.statusCode() == 200) {
-                        return gson.fromJson(response.body(), listType);
-                    } else if (response.statusCode() == 404) {
-                        logger.warn("API Request ({}) to URL '{}' returned 404 Not Found. Returning empty list.", requestType, url);
-                        return java.util.Collections.emptyList();
-                    } else {
-                        logger.error("API Request Failed ({}): {} - {} for URL: {}", requestType, response.statusCode(), response.body(), url);
-                        throw new RuntimeException("API request (" + requestType + ") failed with status code: " + response.statusCode() + "; Body: " + response.body());
-                    }
-                });
+    private <T> T parseResponse(HttpResponse<String> response, Class<T> responseClass, String requestType, String url) {
+        if (response.statusCode() == 200) {
+            try {
+                return objectMapper.readValue(response.body(), responseClass);
+            } catch (JsonProcessingException e) {
+                throw new RiotApiRequestException("Failed to parse API response for " + requestType, e);
+            }
+        } else if (response.statusCode() == 404) {
+            logger.warn("API Request ({}) to URL '{}' returned 404 Not Found.", requestType, url);
+            return null;
+        } else {
+            logger.error("API Request Failed ({}): {} - {} for URL: {}", requestType, response.statusCode(), response.body(), url);
+            throw new RiotApiRequestException("API request (" + requestType + ") failed with status code: " + response.statusCode() + "; Body: " + response.body());
+        }
+    }
+
+    private <T> T parseResponse(HttpResponse<String> response, TypeReference<T> typeReference, String requestType, String url) {
+        if (response.statusCode() == 200) {
+            try {
+                return objectMapper.readValue(response.body(), typeReference);
+            } catch (JsonProcessingException e) {
+                throw new RiotApiRequestException("Failed to parse API response for " + requestType, e);
+            }
+        } else if (response.statusCode() == 404) {
+            logger.warn("API Request ({}) to URL '{}' returned 404 Not Found.", requestType, url);
+            return null;
+        } else {
+            logger.error("API Request Failed ({}): {} - {} for URL: {}", requestType, response.statusCode(), response.body(), url);
+            throw new RiotApiRequestException("API request (" + requestType + ") failed with status code: " + response.statusCode() + "; Body: " + response.body());
+        }
     }
 
     @Cacheable(value = "accounts", key = "#gameName.toLowerCase() + '#' + #tagLine.toLowerCase()")
@@ -135,25 +153,26 @@ public class RiotApiClient {
         return sendApiRequestAsync(url, Summoner.class, "Summoner");
     }
 
-    // =====================================================================
-    // NEUE, KORRIGIERTE METHODE FÜR DIE RANGLISTE
-    // =====================================================================
+    /**
+     * Fetches league entries (rank, tier, etc.) by a summoner's PUUID.
+     * This method was corrected to use the PUUID-based endpoint.
+     */
     @Cacheable(value = "leagueEntries", key = "#puuid")
     public CompletableFuture<List<LeagueEntryDTO>> getLeagueEntriesByPuuid(String puuid) {
         String host = this.platformRegion + ".api.riotgames.com";
         String path = "/lol/league/v4/entries/by-puuid/" + puuid;
         String url = "https://" + host + path;
         logger.debug(">>> RiotApiClient (LeagueEntries): Requesting URL: [{}]", url);
-        return sendApiRequestAsyncForList(url, LEAGUE_LIST_TYPE, "LeagueEntries");
+        return sendApiRequestAsync(url, LEAGUE_LIST_TYPE, "LeagueEntries");
     }
 
     @Cacheable(value = "matchIds", key = "#puuid + '-' + #count")
     public CompletableFuture<List<String>> getMatchIdsByPuuid(String puuid, int count) {
         String host = this.regionalRoute + ".api.riotgames.com";
         String path = "/lol/match/v5/matches/by-puuid/" + puuid + "/ids?count=" + count;
-        String url = "https://" + host + path;
+        String url = "https" + "://" + host + path;
         logger.debug(">>> RiotApiClient (MatchIds): Requesting URL: [{}]", url);
-        return sendApiRequestAsyncForList(url, MATCH_ID_LIST_TYPE, "MatchIds");
+        return sendApiRequestAsync(url, MATCH_ID_LIST_TYPE, "MatchIds");
     }
 
     @Cacheable(value = "matchDetails", key = "#matchId")
