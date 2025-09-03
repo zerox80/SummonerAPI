@@ -2,7 +2,6 @@ package com.zerox80.riotapi.service;
 
 import com.zerox80.riotapi.client.RiotApiClient;
 import com.zerox80.riotapi.model.*;
-import com.zerox80.riotapi.repository.PlayerLpRecordRepository;
 import com.zerox80.riotapi.service.PlayerLpRecordService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,15 +32,12 @@ public class RiotApiService {
     private static final Logger logger = LoggerFactory.getLogger(RiotApiService.class);
     private final RiotApiClient riotApiClient;
     private final PlayerLpRecordService playerLpRecordService;
-    private final PlayerLpRecordRepository playerLpRecordRepository;
 
     @Autowired
     public RiotApiService(RiotApiClient riotApiClient,
-                          PlayerLpRecordService playerLpRecordService,
-                          PlayerLpRecordRepository playerLpRecordRepository) {
+                          PlayerLpRecordService playerLpRecordService) {
         this.riotApiClient = riotApiClient;
         this.playerLpRecordService = playerLpRecordService;
-        this.playerLpRecordRepository = playerLpRecordRepository;
     }
 
     public CompletableFuture<Summoner> getSummonerByRiotId(String gameName, String tagLine) {
@@ -85,14 +81,12 @@ public class RiotApiService {
         logger.info("Suche nach League Entries für PUUID: {}...", puuid);
         CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = riotApiClient.getLeagueEntriesByPuuid(puuid);
 
-        return leagueEntriesFuture.thenCompose(leagueEntries -> {
+        return leagueEntriesFuture.thenApply(leagueEntries -> {
             if (leagueEntries != null && !leagueEntries.isEmpty()) {
                 Instant now = Instant.now();
-                return playerLpRecordService.savePlayerLpRecordsAsync(puuid, leagueEntries, now)
-                         .thenApply(v -> leagueEntries);
-            } else {
-                return CompletableFuture.completedFuture(leagueEntries);
+                playerLpRecordService.savePlayerLpRecords(puuid, leagueEntries, now);
             }
+            return leagueEntries;
         }).exceptionally(ex -> {
             logger.error("Error fetching or processing league entries for puuid {}: {}", puuid, ex.getMessage(), ex);
             return Collections.emptyList();
@@ -213,7 +207,7 @@ public class RiotApiService {
                                 List<LeagueEntryDTO> leagueEntries = leagueEntriesFuture.join();
                                 List<MatchV5Dto> matchHistory = matchHistoryFuture.join();
 
-                                calculateAndSetLpChanges(summoner, matchHistory);
+                                playerLpRecordService.calculateAndSetLpChangesForMatches(summoner, matchHistory);
 
                                 Map<String, Long> championPlayCounts = getChampionPlayCounts(matchHistory, summoner.getPuuid());
 
@@ -224,67 +218,5 @@ public class RiotApiService {
                     logger.error("Error building summoner profile data for {}#{}: {}", gameName, tagLine, ex.getMessage(), ex);
                     return new SummonerProfileData("An error occurred while fetching summoner profile data: " + ex.getMessage());
                 });
-    }
-
-    private void calculateAndSetLpChanges(Summoner summoner, List<MatchV5Dto> matchHistory) {
-        if (summoner == null || !StringUtils.hasText(summoner.getPuuid()) || matchHistory == null || matchHistory.isEmpty()) {
-            return;
-        }
-
-        for (MatchV5Dto match : matchHistory) {
-            if (match.getInfo() == null) continue;
-
-            int queueId = match.getInfo().getQueueId();
-            String queueTypeForDbQuery;
-            if (queueId == 420) {
-                queueTypeForDbQuery = "RANKED_SOLO_5x5";
-            } else if (queueId == 440) {
-                queueTypeForDbQuery = "RANKED_FLEX_SR";
-            } else {
-                continue;
-            }
-
-            Instant matchEndTime = Instant.ofEpochMilli(match.getInfo().getGameEndTimestamp());
-
-            try {
-                Optional<PlayerLpRecord> recordBeforeOpt = playerLpRecordRepository
-                        .findFirstByPuuidAndQueueTypeAndTimestampBeforeOrderByTimestampDesc(
-                                summoner.getPuuid(), queueTypeForDbQuery, matchEndTime);
-
-                Optional<PlayerLpRecord> recordAfterOpt = playerLpRecordRepository
-                        .findFirstByPuuidAndQueueTypeAndTimestampGreaterThanEqualOrderByTimestampAsc(
-                                summoner.getPuuid(), queueTypeForDbQuery, matchEndTime);
-
-                if (recordBeforeOpt.isPresent() && recordAfterOpt.isPresent()) {
-                    PlayerLpRecord recordBefore = recordBeforeOpt.get();
-                    PlayerLpRecord recordAfter = recordAfterOpt.get();
-
-                    if (recordAfter.getTimestamp().isBefore(matchEndTime)) {
-                        logger.debug("LP record after match {} for PUUID {} (queue {}) occurs before match end time {}.",
-                                match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery, matchEndTime);
-                        continue;
-                    }
-
-                    int lpBefore = recordBefore.getLeaguePoints();
-                    int lpAfter = recordAfter.getLeaguePoints();
-                    int lpChange = lpAfter - lpBefore;
-
-                    if (!recordBefore.getTier().equals(recordAfter.getTier()) || !recordBefore.getRank().equals(recordAfter.getRank())) {
-                        logger.warn("Tier/Rank changed for match {}. PUUID: {}. Before: {} {} {} LP, After: {} {} {} LP. LP Change calculation might be inaccurate or represent promotion/demotion.",
-                                match.getMetadata().getMatchId(), summoner.getPuuid(),
-                                recordBefore.getTier(), recordBefore.getRank(), recordBefore.getLeaguePoints(),
-                                recordAfter.getTier(), recordAfter.getRank(), recordAfter.getLeaguePoints());
-                        match.getInfo().setLpChange(null);
-                    } else {
-                        match.getInfo().setLpChange(lpChange);
-                    }
-                } else {
-                    logger.debug("LP records before or after match {} not found for PUUID {} and queue {}. Cannot calculate LP change.",
-                            match.getMetadata().getMatchId(), summoner.getPuuid(), queueTypeForDbQuery);
-                }
-            } catch (Exception e) {
-                logger.error("Error calculating LP change for match {} PUUID {}: {}", match.getMetadata().getMatchId(), summoner.getPuuid(), e.getMessage(), e);
-            }
-        }
     }
 }

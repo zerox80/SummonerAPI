@@ -18,4 +18,6 @@ public interface PlayerLpRecordRepository extends JpaRepository<PlayerLpRecord, 
             String puuid, String queueType, Instant timestamp);
 
     List<PlayerLpRecord> findByPuuidAndQueueTypeOrderByTimestampDesc(String puuid, String queueType);
+
+    List<PlayerLpRecord> findByPuuid(String puuid);
 } 

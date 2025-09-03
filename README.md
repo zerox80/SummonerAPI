@@ -13,6 +13,7 @@
 - 📊 **Profile Overview:** Summoner level, icon, and PUUID display.
 - 🏆 **Ranked Stats:** View current rank, tier, and win/loss records for all queues.
 - 📜 **Match History:** See a list of recent matches.
+- 📈 **LP History (Experimental):** Saves ranked data points in a PostgreSQL database to calculate LP changes per game.
 - 💻 **Web Interface:** Built with Thymeleaf for a smooth and lightweight user experience.
 
 ---
@@ -25,6 +26,8 @@
 - Thymeleaf (HTML templates)
 - Lombok (to reduce boilerplate)
 - Caffeine (API response caching)
+- **PostgreSQL** (for LP history)
+- **Spring Data JPA** (for database access)
 - Riot Games API
 
 ---
@@ -36,7 +39,7 @@
 - **JDK 21 or newer:** [Download here](https://www.oracle.com/java/technologies/downloads/)
 - **Maven:** [Install here](https://maven.apache.org/download.cgi)
 - **Riot API Key:** [Apply for one](https://developer.riotgames.com/)
-  - Note: Dev keys expire after 24 hours and are rate-limited.
+- **PostgreSQL:** A running PostgreSQL instance.
 
 ### 2. Setup
 
@@ -50,9 +53,23 @@ cd SummonerAPI
 Open `src/main/resources/application.properties` and update the following:
 
 ```properties
+# Riot API
 riot.api.key=YOUR_API_KEY_HERE
 riot.api.region=euw1 # e.g., na1, kr, eun1
+
+# Server Port
 server.port=8080      # Change if needed
+```
+
+#### Database Configuration
+
+This project uses PostgreSQL to store LP history. Update these properties in `application.properties` with your database credentials:
+
+```properties
+# PostgreSQL Datasource
+spring.datasource.url=jdbc:postgresql://localhost:5432/YOUR_DATABASE
+spring.datasource.username=YOUR_USERNAME
+spring.datasource.password=YOUR_PASSWORD
 ```
 
 ### 3. Build and Run
