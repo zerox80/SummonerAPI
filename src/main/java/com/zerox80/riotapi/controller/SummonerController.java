@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.List;
 import java.util.Collections;
@@ -61,6 +64,36 @@ public class SummonerController {
     public List<SummonerSuggestionDTO> summonerSuggestions(@RequestParam("query") String query, HttpServletRequest request) {
         Map<String, SummonerSuggestionDTO> userHistory = getSearchHistoryFromCookie(request);
         return riotApiService.getSummonerSuggestions(query, userHistory);
+    }
+
+    @GetMapping("/api/me")
+    @ResponseBody
+    public Callable<ResponseEntity<?>> getMySummoner(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        if (!StringUtils.hasText(authorizationHeader) || !authorizationHeader.startsWith("Bearer ")) {
+            return () -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Missing or invalid Authorization header. Expected 'Bearer <token>'."));
+        }
+
+        String bearerToken = authorizationHeader.substring("Bearer ".length()).trim();
+        if (!StringUtils.hasText(bearerToken)) {
+            return () -> ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("error", "Empty bearer token."));
+        }
+
+        return () -> {
+            try {
+                Summoner summoner = riotApiService.getSummonerViaRso(bearerToken).join();
+                if (summoner == null) {
+                    return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                            .body(Map.of("error", "Summoner not found or token invalid."));
+                }
+                return ResponseEntity.ok(summoner);
+            } catch (Exception e) {
+                logger.error("Error in /api/me endpoint: {}", e.getMessage(), e);
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                        .body(Map.of("error", "Internal error while resolving summoner via RSO."));
+            }
+        };
     }
 
     @RequestMapping(value = "/search", method = {RequestMethod.GET, RequestMethod.POST})

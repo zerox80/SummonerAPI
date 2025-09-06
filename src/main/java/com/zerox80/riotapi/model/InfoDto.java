@@ -1,7 +1,6 @@
 package com.zerox80.riotapi.model;
 
 import java.util.List;
-import com.google.gson.annotations.SerializedName;
 
 public class InfoDto {
     private long gameCreation;
@@ -10,11 +9,10 @@ public class InfoDto {
     private long gameId;
     private String gameMode;
     private String gameName;
-    private long gameStartTimeStamp;
+    private long gameStartTimestamp;
     private String gameType;
     private String gameVersion;
     private int mapId;
-    @SerializedName("participants")
     private List<ParticipantDto> participants;
     private String platformId;
     private int queueId;
@@ -57,11 +55,11 @@ public class InfoDto {
     public void setGameName(String gameName) {
         this.gameName = gameName;
     }
-    public long getGameStartTimeStamp() {
-        return gameStartTimeStamp;
+    public long getGameStartTimestamp() {
+        return gameStartTimestamp;
     }
-    public void setGameStartTimeStamp(long gameStartTimeStamp) {
-        this.gameStartTimeStamp = gameStartTimeStamp;
+    public void setGameStartTimestamp(long gameStartTimestamp) {
+        this.gameStartTimestamp = gameStartTimestamp;
     }
     public String getGameType() {
         return gameType;

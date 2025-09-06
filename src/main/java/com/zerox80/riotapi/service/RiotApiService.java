@@ -78,19 +78,21 @@ public class RiotApiService {
             logger.error("Error: PUUID cannot be empty.");
             return CompletableFuture.completedFuture(Collections.emptyList());
         }
-        logger.info("Fetching league entries for PUUID: {}...", puuid);
-        CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = riotApiClient.getLeagueEntriesByPuuid(puuid);
+        logger.info("Fetching league entries (by PUUID) for PUUID: {}...", puuid);
 
-        return leagueEntriesFuture.thenApply(leagueEntries -> {
-            if (leagueEntries != null && !leagueEntries.isEmpty()) {
-                Instant now = Instant.now();
-                playerLpRecordService.savePlayerLpRecords(puuid, leagueEntries, now);
-            }
-            return leagueEntries;
-        }).exceptionally(ex -> {
-            logger.error("Error fetching or processing league entries for puuid {}: {}", puuid, ex.getMessage(), ex);
-            return Collections.emptyList();
-        });
+        return riotApiClient.getLeagueEntriesByPuuid(puuid)
+                .thenApply(leagueEntries -> {
+                    if (leagueEntries != null && !leagueEntries.isEmpty()) {
+                        Instant now = Instant.now();
+                        playerLpRecordService.savePlayerLpRecords(puuid, leagueEntries, now);
+                    }
+                    return leagueEntries;
+                })
+                .exceptionally(ex -> {
+                    logger.error("Error fetching or processing league entries for puuid {}: {}",
+                            puuid, ex.getMessage(), ex);
+                    return Collections.emptyList();
+                });
     }
 
     @Cacheable(value = "matchHistory", key = "#puuid + '-' + #numberOfMatches")
@@ -195,8 +197,21 @@ public class RiotApiService {
                     String iconUrl = riotApiClient.getProfileIconUrl(summoner.getProfileIconId());
                     SummonerSuggestionDTO suggestionDTO = new SummonerSuggestionDTO(displayRiotId, summoner.getProfileIconId(), summoner.getSummonerLevel());
 
-                    // Fetch league entries and match history concurrently
-                    CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture = getLeagueEntries(summoner.getPuuid());
+                    // Fetch league entries (by PUUID) and match history concurrently
+                    CompletableFuture<List<LeagueEntryDTO>> leagueEntriesFuture =
+                            riotApiClient.getLeagueEntriesByPuuid(summoner.getPuuid())
+                                    .thenApply(leagueEntries -> {
+                                        if (leagueEntries != null && !leagueEntries.isEmpty()) {
+                                            Instant now = Instant.now();
+                                            playerLpRecordService.savePlayerLpRecords(summoner.getPuuid(), leagueEntries, now);
+                                        }
+                                        return leagueEntries;
+                                    })
+                                    .exceptionally(ex -> {
+                                        logger.error("Error fetching league entries for puuid {}: {}",
+                                                summoner.getPuuid(), ex.getMessage(), ex);
+                                        return Collections.emptyList();
+                                    });
                     CompletableFuture<List<MatchV5Dto>> matchHistoryFuture = getMatchHistory(summoner.getPuuid(), 5);
 
                     return CompletableFuture.allOf(leagueEntriesFuture, matchHistoryFuture)
@@ -214,6 +229,22 @@ public class RiotApiService {
                 .exceptionally(ex -> {
                     logger.error("Error building summoner profile data for {}#{}: {}", gameName, tagLine, ex.getMessage(), ex);
                     return new SummonerProfileData("An error occurred while fetching summoner profile data: " + ex.getMessage());
+                });
+    }
+
+    /**
+     * Fetch the currently authenticated user's summoner profile using an RSO Bearer token.
+     * This uses the endpoint /lol/summoner/v4/summoners/me and does NOT require the X-Riot-Token.
+     */
+    public CompletableFuture<Summoner> getSummonerViaRso(String bearerToken) {
+        if (!StringUtils.hasText(bearerToken)) {
+            logger.error("Error: bearerToken is empty for RSO summoner request.");
+            return CompletableFuture.completedFuture(null);
+        }
+        return riotApiClient.getSummonerMeWithBearer(bearerToken)
+                .exceptionally(ex -> {
+                    logger.error("Error fetching RSO summoner via /me: {}", ex.getMessage(), ex);
+                    return null;
                 });
     }
 }

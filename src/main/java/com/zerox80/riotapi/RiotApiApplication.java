@@ -3,9 +3,6 @@ package com.zerox80.riotapi;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.context.annotation.Bean;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
 
 @SpringBootApplication
 @EnableCaching
@@ -15,16 +12,5 @@ public class RiotApiApplication {
         SpringApplication.run(RiotApiApplication.class, args);
     }
 
-    @Bean
-    public CommandLineRunner commandLineRunner(@Value("${spring.datasource.password}") String password) {
-        return args -> {
-            System.out.println("\n\n\n");
-            System.out.println("****************************************************************");
-            System.out.println("****************************************************************");
-            System.out.println("DAS PASSWORT, DAS DIE APP WIRKLICH BENUTZT: [" + password + "]");
-            System.out.println("****************************************************************");
-            System.out.println("****************************************************************");
-            System.out.println("\n\n\n");
-        };
-    }
+    // Removed insecure CommandLineRunner that printed sensitive configuration
 }
