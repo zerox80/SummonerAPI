@@ -285,9 +285,13 @@
             </div>
 
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
-                <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-0 match-row" th:classappend="${#lists.contains(match.info.participants.?[puuid==summoner.puuid].![win], true) ? ' win' : ' loss'}" th:attr="data-q=${match.info.queueId}, data-k=${match.info.participants.?[puuid==summoner.puuid][0].kills}, data-d=${match.info.participants.?[puuid==summoner.puuid][0].deaths}, data-a=${match.info.participants.?[puuid==summoner.puuid][0].assists}, data-win=${match.info.participants.?[puuid==summoner.puuid][0].win}">
+                <div th:each="match, iterStat : ${matchHistory}"
+                     th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}"
+                     class="list-group-item match-row"
+                     th:classappend="${me != null && me.win ? ' win' : ' loss'}"
+                     th:attr="data-q=${match.info.queueId}, data-k=${me != null ? me.kills : 0}, data-d=${me != null ? me.deaths : 0}, data-a=${me != null ? me.assists : 0}, data-win=${me != null ? me.win : false}">
                     <span class="d-none search-index">
-                        <th:block th:with="me=${match.info.participants.?[puuid==summoner.puuid][0]}">
+                        <th:block th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
                             <span th:text="${me != null ? me.championName : ''}"></span>
                         </th:block>
                         <th:block th:each="p : ${match.info.participants}">
@@ -297,16 +301,14 @@
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ') + ' (' + (match.info.gameDuration / 60) + 'm ' + (match.info.gameDuration % 60) + 's)'}">Game Mode (Duration)</h5>
                         <div class="d-flex align-items-center">
-                            <th:block th:with="searchedSummonerPuuid=${summoner.puuid}">
-                                <th:block th:each="p : ${match.info.participants}" th:if="${p.puuid == searchedSummonerPuuid}">
-                                        <span class="badge rounded-pill px-3 py-2 fw-semibold"
-                                              th:text="${p.win ? 'Victory' : 'Defeat'}"
-                                              th:classappend="${p.win ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'}"></span>
-                                    <span th:if="${match.info.lpChange != null}"
-                                          th:text="${(match.info.lpChange > 0 ? '+' : '') + match.info.lpChange + ' LP'}"
-                                          th:classappend="${match.info.lpChange > 0 ? 'lp-badge gain ms-2' : (match.info.lpChange < 0 ? 'lp-badge loss ms-2' : 'lp-badge neutral ms-2')}">
-                                        </span>
-                                </th:block>
+                            <th:block th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
+                                <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                      th:text="${me != null && me.win ? 'Victory' : 'Defeat'}"
+                                      th:classappend="${me != null && me.win ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'}"></span>
+                                <span th:if="${match.info.lpChange != null}"
+                                      th:text="${(match.info.lpChange > 0 ? '+' : '') + match.info.lpChange + ' LP'}"
+                                      th:classappend="${match.info.lpChange > 0 ? 'lp-badge gain ms-2' : (match.info.lpChange < 0 ? 'lp-badge loss ms-2' : 'lp-badge neutral ms-2')}">
+                                </span>
                             </th:block>
                         </div>
                     </div>

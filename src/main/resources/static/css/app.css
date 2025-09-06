@@ -91,12 +91,13 @@ html, body {
   border-radius: .75rem;
   border: 1px solid rgba(255,255,255,.06);
   background: rgba(255,255,255,.02);
-  padding: 1rem;
+  padding: .75rem 1rem;
   margin: .5rem 1rem;
   display: grid;
   grid-template-columns: 160px 1fr auto;
   gap: 1rem;
   align-items: center;
+  min-height: 64px;
 }
 .theme-light .match-row { background: rgba(255,255,255,.85); border-color: rgba(0,0,0,.06); }
 .match-row.win { box-shadow: inset 4px 0 0 0 #1e90ff20, 0 4px 12px rgba(30,144,255,.05); }
