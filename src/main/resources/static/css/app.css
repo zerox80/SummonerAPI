@@ -87,3 +87,9 @@ html, body {
 
 /* Footer blend */
 .footer { border-top: 1px solid rgba(255,255,255,.08); }
+
+/* Charts */
+.chart-canvas {
+  height: 220px !important; /* ensure visible size across themes */
+  max-height: 60vh;
+}

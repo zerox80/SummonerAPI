@@ -134,14 +134,35 @@
     </div>
 
     <!-- LP Progression Chart -->
-    <div th:if="${summoner != null && matchHistory != null}" class="card section-card glass-card shadow-sm">
+    <div th:if="${
+            summoner != null && (
+                (leagueEntries != null && !leagueEntries.isEmpty())
+                or (matchHistory != null && !#lists.isEmpty(matchHistory.?[info.queueId == 420 or info.queueId == 440]))
+            )
+        }" class="card section-card glass-card shadow-sm">
         <div class="card-header section-header d-flex align-items-center gap-2">
             <i class="fa-solid fa-chart-line text-primary"></i>
             LP Progression (last matches)
         </div>
         <div class="card-body">
-            <canvas id="lpChart" height="120"></canvas>
+            <canvas id="lpChart" class="chart-canvas" height="120"></canvas>
             <small class="text-muted d-block mt-2">If absolute LP is unavailable, the chart shows relative LP change.</small>
+        </div>
+    </div>
+
+    <!-- LP Progression: No data message -->
+    <div th:if="${
+            summoner != null && (
+                (leagueEntries == null || leagueEntries.isEmpty())
+                and (matchHistory == null || #lists.isEmpty(matchHistory.?[info.queueId == 420 or info.queueId == 440]))
+            )
+        }" class="card section-card glass-card shadow-sm">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-chart-line text-secondary"></i>
+            LP Progression (last matches)
+        </div>
+        <div class="card-body">
+            <p class="mb-0 text-muted">No ranked LP data to display yet. Play some ranked Solo/Duo or Flex matches to fill this chart.</p>
         </div>
     </div>
 
@@ -152,7 +173,7 @@
             Champion Distribution (recent matches)
         </div>
         <div class="card-body">
-            <canvas id="championChart" height="120"></canvas>
+            <canvas id="championChart" class="chart-canvas" height="120"></canvas>
         </div>
     </div>
 
@@ -413,7 +434,22 @@
                 themeToggleBtn.innerHTML = theme === 'light' ? '<i class="fa-regular fa-moon"></i>' : '<i class="fa-regular fa-sun"></i>';
             }
             localStorage.setItem('theme', theme);
-            setTimeout(() => charts.forEach(ch => ch && ch.resize()), 50);
+            setTimeout(() => {
+                const colors = chartColors();
+                charts.forEach(ch => {
+                    if (!ch) return;
+                    try {
+                        if (ch.options?.scales?.x?.ticks) ch.options.scales.x.ticks.color = colors.text;
+                        if (ch.options?.scales?.x?.grid) ch.options.scales.x.grid.color = colors.grid;
+                        if (ch.options?.scales?.y?.ticks) ch.options.scales.y.ticks.color = colors.text;
+                        if (ch.options?.scales?.y?.grid) ch.options.scales.y.grid.color = colors.grid;
+                        if (ch.options?.plugins?.legend?.labels) ch.options.plugins.legend.labels.color = colors.text;
+                        ch.update();
+                    } catch (_) {
+                        ch.resize();
+                    }
+                });
+            }, 100);
         }
 
         const savedTheme = localStorage.getItem('theme') || 'dark';
