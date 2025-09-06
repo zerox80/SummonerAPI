@@ -86,6 +86,36 @@ html, body {
 
 .player-performance { background: rgba(255,255,255,.02); border-radius: .5rem; }
 
+/* Enhanced match rows (inspired, not identical) */
+.match-row {
+  border-radius: .75rem;
+  border: 1px solid rgba(255,255,255,.06);
+  background: rgba(255,255,255,.02);
+  padding: 1rem;
+  margin: .5rem 1rem;
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+.theme-light .match-row { background: rgba(255,255,255,.85); border-color: rgba(0,0,0,.06); }
+.match-row.win { box-shadow: inset 4px 0 0 0 #1e90ff20, 0 4px 12px rgba(30,144,255,.05); }
+.match-row.loss { box-shadow: inset 4px 0 0 0 #ff4d4d20, 0 4px 12px rgba(255,77,77,.05); }
+.match-row .meta { display: flex; flex-direction: column; gap: .35rem; }
+.match-row .meta .queue { font-weight: 600; opacity: .95; }
+.match-row .meta .time { font-size: .85rem; opacity: .7; }
+.match-row .perform { display: flex; align-items: center; gap: .5rem; }
+.match-row .perform .champ { width: 36px; height: 36px; border-radius: .5rem; object-fit: cover; }
+.match-row .badges { display: flex; align-items: center; gap: .5rem; }
+.lp-badge { font-weight: 600; padding: .35rem .6rem; border-radius: 999px; }
+.lp-badge.neutral { background: rgba(255,255,255,.06); color: #cbd5e1; }
+.lp-badge.gain { background: rgba(10,200,185,.18); color: #7eeadf; }
+.lp-badge.loss { background: rgba(255,77,77,.15); color: #ff9a9a; }
+
+@media (max-width: 768px) {
+  .match-row { grid-template-columns: 1fr; margin: .5rem 0; }
+}
+
 /* Footer blend */
 .footer { border-top: 1px solid rgba(255,255,255,.08); }
 
@@ -112,3 +142,11 @@ html, body {
 .section-header a { color: inherit; }
 .section-header a .chev { transition: transform .2s ease; }
 .section-header a:not(.collapsed) .chev { transform: rotate(180deg); }
+
+/* History controls */
+.history-controls .nav-pills .nav-link { padding: .35rem .75rem; }
+.history-controls .form-control { min-width: 240px; }
+
+/* Colored team backgrounds */
+.team-blue-table tbody tr { background: rgba(30,144,255,0.06); }
+.team-red-table tbody tr { background: rgba(255,77,77,0.06); }

@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="SummonerAPI – Search League of Legends summoners, view ranks, recent matches and champion stats.">
+    <meta name="description" content="SummonerAPI ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œ Search League of Legends summoners, view ranks, recent matches and champion stats.">
     <meta name="theme-color" id="themeColor" content="#0b1018">
     <title>SummonerAPI - League Stats</title>
-    <meta name="description" content="SummonerAPI — Search League of Legends summoners, view ranks, recent matches and champion stats.">
+    <meta name="description" content="SummonerAPI ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â Search League of Legends summoners, view ranks, recent matches and champion stats.">
     <!-- Preconnects for faster CDN fetches -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
@@ -160,7 +160,7 @@
                                   style="width: 28px; height: 28px; object-fit: cover;"
                                   loading="lazy"/>
                             <span th:text="${champEntry.key}" class="fw-medium">ChampionName</span>
-                            <span class="text-muted mx-2">•</span>
+                            <span class="text-muted mx-2">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢</span>
                             <span th:text="${champEntry.value}">0</span>
                             <span class="ms-1 text-muted">games</span>
                         </li>
@@ -250,7 +250,25 @@
                 <i class="fas fa-chevron-down fa-xs chev" aria-hidden="true"></i>
             </a>
         </div>
-        <div class="collapse show" id="matchHistoryCollapse">
+        <div class="px-3 py-2 border-top d-flex align-items-center gap-2 flex-wrap history-controls">
+            <ul class="nav nav-pills" id="historyFilters" role="tablist">
+                <li class="nav-item" role="presentation"><button class="nav-link active" data-filter="all" type="button">All</button></li>
+                <li class="nav-item" role="presentation"><button class="nav-link" data-filter="ranked" type="button">Ranked</button></li>
+                
+            </ul>
+            <div class='dropdown ms-1'>
+                <button class='btn btn-sm btn-outline-secondary dropdown-toggle' type='button' data-bs-toggle='dropdown' aria-expanded='false' id='queueToggle'>Queues</button>
+                <ul class='dropdown-menu' id='queueDropdown' aria-labelledby='queueToggle'></ul>
+            </div>
+
+            <div class="ms-auto">
+                <div class="input-group input-group-sm" style="max-width: 320px;">
+                    <span class="input-group-text bg-transparent border-0"><i class="fas fa-search"></i></span>
+                    <input type="search" id="matchSearch" class="form-control" placeholder="Search champion or player" aria-label="Search matches">
+                </div>
+            </div>
+        </div>
+        <div class="px-3 py-2 border-top history-summary text-secondary small">\n            <span id="summaryWR">WR: -</span>\n            <span class="mx-2">&bull;</span>\n            <span id="summaryKDA">KDA: -</span>\n            <span class="mx-2">&bull;</span>\n            <span id="summaryCount">Last 20 games</span>\n        </div>\n        <div class="collapse show" id="matchHistoryCollapse">
             <div th:if="${matchHistory.isEmpty()}" class="card-body">
                 <p th:if="${matchHistoryInfo}" th:text="${matchHistoryInfo}">No recent matches found.</p>
                 <p th:unless="${matchHistoryInfo}">No recent matches found or an error occurred.</p>
@@ -260,7 +278,15 @@
             </div>
 
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
-                <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-3 match-item">
+                <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-0 match-row" th:classappend="${#lists.contains(match.info.participants.?[puuid==summoner.puuid].![win], true) ? ' win' : ' loss'}" th:attr="data-q=${match.info.queueId}, data-k=${match.info.participants.?[puuid==summoner.puuid][0].kills}, data-d=${match.info.participants.?[puuid==summoner.puuid][0].deaths}, data-a=${match.info.participants.?[puuid==summoner.puuid][0].assists}, data-win=${match.info.participants.?[puuid==summoner.puuid][0].win}">
+                    <span class="d-none search-index">
+                        <th:block th:with="me=${match.info.participants.?[puuid==summoner.puuid][0]}">
+                            <span th:text="${me != null ? me.championName : ''}"></span>
+                        </th:block>
+                        <th:block th:each="p : ${match.info.participants}">
+                            <span th:text="${(p.riotIdGameName != null && p.riotIdTagline != null) ? p.riotIdGameName + '#' + p.riotIdTagline : ''}"></span>
+                        </th:block>
+                    </span>
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ') + ' (' + (match.info.gameDuration / 60) + 'm ' + (match.info.gameDuration % 60) + 's)'}">Game Mode (Duration)</h5>
                         <div class="d-flex align-items-center">
@@ -270,8 +296,8 @@
                                               th:text="${p.win ? 'Victory' : 'Defeat'}"
                                               th:classappend="${p.win ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'}"></span>
                                     <span th:if="${match.info.lpChange != null}"
-                                          th:text="${match.info.lpChange > 0 ? '+' + match.info.lpChange + ' LP' : match.info.lpChange + ' LP'}"
-                                          th:classappend="${match.info.lpChange > 0 ? 'badge rounded-pill bg-success-subtle text-success-emphasis ms-2' : (match.info.lpChange < 0 ? 'badge rounded-pill bg-danger-subtle text-danger-emphasis ms-2' : 'badge rounded-pill bg-secondary-subtle text-light-emphasis ms-2')}">
+                                          th:text="${(match.info.lpChange > 0 ? '+' : '') + match.info.lpChange + ' LP'}"
+                                          th:classappend="${match.info.lpChange > 0 ? 'lp-badge gain ms-2' : (match.info.lpChange < 0 ? 'lp-badge loss ms-2' : 'lp-badge neutral ms-2')}">
                                         </span>
                                 </th:block>
                             </th:block>
@@ -518,7 +544,140 @@
 
         // Install image error fallbacks for champion images
         (function installImageFallbacks(){
-            try {
+            // =====================
+                // Match filtering + summary widget
+        // =====================
+        (function(){
+            const rows = Array.from(document.querySelectorAll('.match-row'));
+            if (!rows.length) return;
+            const filters = document.getElementById('historyFilters');
+            const searchInput = document.getElementById('matchSearch');
+            const elWR = document.getElementById('summaryWR');
+            const elKDA = document.getElementById('summaryKDA');
+            const elCount = document.getElementById('summaryCount');
+            const queueToggle = document.getElementById('queueToggle');
+            const queueDropdown = document.getElementById('queueDropdown');
+
+            const QUEUE_NAMES = {
+                420: 'Ranked Solo/Duo',
+                440: 'Ranked Flex',
+                400: 'Normal Draft',
+                430: 'Normal Blind',
+                450: 'ARAM',
+                700: 'Clash',
+                1700: 'Arena',
+                1900: 'URF',
+                900: 'URF (old)',
+                0: 'Custom',
+                1100: 'TFT Ranked',
+                1090: 'TFT Normal',
+                1130: 'TFT Double Up',
+                1160: 'TFT Hyper Roll'
+            };
+            function isRankedQ(q){ return q === 420 || q === 440 || q === 1100; }
+
+            // Populate dropdown with present queues
+            (function buildQueueMenu(){
+                if (!queueDropdown) return;
+                const present = Array.from(new Set(rows.map(r => Number(r.getAttribute('data-q'))).filter(q => !Number.isNaN(q))));
+                const items = present.length ? present : Object.keys(QUEUE_NAMES).map(Number);
+                const uniqueSorted = Array.from(new Set(items)).sort((a,b)=>a-b);
+                queueDropdown.innerHTML = '';
+                const allItem = document.createElement('li');
+                allItem.innerHTML = '<button class="dropdown-item" data-q="">All queues</button>';
+                queueDropdown.appendChild(allItem);
+                const divider = document.createElement('li'); divider.innerHTML = '<hr class="dropdown-divider">'; queueDropdown.appendChild(divider);
+                uniqueSorted.forEach(q=>{
+                    const li = document.createElement('li');
+                    const label = QUEUE_NAMES[q] || ('Queue ' + q);
+                    li.innerHTML = `<button class="dropdown-item" data-q="${q}">${label}</button>`;
+                    queueDropdown.appendChild(li);
+                });
+            })();
+
+            let selectedQueue = null; // null = none
+
+            function currentFilter(){
+                const active = filters?.querySelector('.nav-link.active');
+                return active?.getAttribute('data-filter') || 'all';
+            }
+
+            function matchesFilter(row){
+                const q = Number(row.getAttribute('data-q')) || 0;
+                if (selectedQueue !== null) return q === selectedQueue;
+                const f = currentFilter();
+                if (f === 'all') return true;
+                if (f === 'ranked') return isRankedQ(q);
+                return true;
+            }
+
+            function matchesSearch(row, term){
+                if (!term) return true;
+                const hay = (row.querySelector('.search-index')?.innerText || '').toLowerCase();
+                return hay.includes(term.toLowerCase());
+            }
+
+            function apply(){
+                const term = searchInput?.value?.trim().toLowerCase() || '';
+                rows.forEach(r => {
+                    const show = matchesFilter(r) && matchesSearch(r, term);
+                    r.style.display = show ? '' : 'none';
+                });
+                updateSummary();
+            }
+
+            function updateSummary(){
+                const vis = rows.filter(r => r.style.display !== 'none').slice(0,20);
+                let wins=0, k=0, d=0, a=0;
+                vis.forEach(r => {
+                    if (String(r.getAttribute('data-win')) === 'true') wins++;
+                    k += Number(r.getAttribute('data-k'))||0;
+                    d += Number(r.getAttribute('data-d'))||0;
+                    a += Number(r.getAttribute('data-a'))||0;
+                });
+                const games = vis.length;
+                const wr = games ? Math.round((wins/games)*100) : 0;
+                const kda = (d>0) ? (((k+a)/d).toFixed(2)) : (k+a).toFixed(2);
+                if (elWR) elWR.textContent = 'WR: ' + (games ? (wr + '%') : '-');
+                if (elKDA) elKDA.textContent = 'KDA: ' + (games ? kda : '-');
+                if (elCount) elCount.textContent = `Last ${games} game${games===1?'':'s'}`;
+            }
+
+            // Filter tab clicks (All/Ranked)
+            filters?.addEventListener('click', (e)=>{
+                const btn = e.target.closest('button[data-filter]');
+                if (!btn) return;
+                e.preventDefault();
+                filters.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
+                btn.classList.add('active');
+                selectedQueue = null; // clear queue filter when switching tabs
+                if (queueToggle) queueToggle.textContent = 'Queues';
+                apply();
+            });
+
+            // Queue dropdown
+            queueDropdown?.addEventListener('click', (e)=>{
+                const item = e.target.closest('button[data-q]');
+                if (!item) return;
+                e.preventDefault();
+                const v = item.getAttribute('data-q');
+                selectedQueue = (v === '' ? null : Number(v));
+                if (queueToggle) {
+                    queueToggle.textContent = selectedQueue === null ? 'Queues' : (QUEUE_NAMES[selectedQueue] || ('Queue ' + selectedQueue));
+                }
+                // Reset pills to All to make state predictable
+                if (filters) {
+                    filters.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
+                    const allBtn = filters.querySelector('[data-filter="all"]');
+                    if (allBtn) allBtn.classList.add('active');
+                }
+                apply();
+            });
+
+            // Search
+            let t; searchInput?.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(apply, 200); });
+            apply();
+        })();        try {
                 document.querySelectorAll('img[src*="/ui/champions/"]').forEach(img => {
                     img.addEventListener('error', function(){
                         this.style.display = 'none';
