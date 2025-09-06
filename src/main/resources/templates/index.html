@@ -293,12 +293,12 @@
                 <th:block th:each="match, iterStat : ${matchHistory}">
                     <!-- Render only if we have basic match info -->
                     <th:block th:if="${match != null and match.info != null}">
-                    <div th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}"
+                    <div th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==#vars.summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}"
                          class="list-group-item match-row"
                          th:classappend="${me != null && me.win ? ' win' : ' loss'}"
                          th:attr="data-q=${match.info.queueId}, data-k=${me != null ? me.kills : 0}, data-d=${me != null ? me.deaths : 0}, data-a=${me != null ? me.assists : 0}, data-win=${me != null ? me.win : false}">
                         <span class="d-none search-index">
-                            <th:block th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}">
+                            <th:block th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==#vars.summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}">
                                 <span th:text="${me != null ? me.championName : ''}"></span>
                             </th:block>
                             <th:block th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}">
