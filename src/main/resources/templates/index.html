@@ -10,25 +10,11 @@
     <!-- Preconnects for faster CDN fetches -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-    <!-- Bootswatch Theme (injected early to avoid flicker) -->
-    <script th:attr="nonce=${cspNonce}">
-        (function() {
-            try {
-                var THEMES = { dark: 'darkly', light: 'flatly' };
-                var saved = localStorage.getItem('theme') || 'dark';
-                var themeName = THEMES[saved] || THEMES.dark;
-                var href = 'https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/' + themeName + '/bootstrap.min.css';
-                var link = document.createElement('link');
-                link.id = 'themeStylesheet';
-                link.rel = 'stylesheet';
-                link.href = href;
-                link.crossOrigin = 'anonymous';
-                document.head.appendChild(link);
-                var meta = document.getElementById('themeColor');
-                if (meta) meta.setAttribute('content', saved === 'light' ? '#f7f7fb' : '#0b1018');
-            } catch (_) { /* no-op */ }
-        })();
-    </script>
+    <!-- Bootswatch Theme (default to dark; JS may swap href) -->
+    <link id="themeStylesheet" rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css" crossorigin="anonymous">
+    <noscript>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css" crossorigin="anonymous">
+    </noscript>
     <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
