@@ -257,7 +257,7 @@
                 
             </ul>
             <div class='dropdown ms-1'>
-                <button class='btn btn-sm btn-outline-secondary dropdown-toggle' type='button' data-bs-toggle='dropdown' aria-expanded='false' id='queueToggle'>Queues</button>
+                <button class='btn btn-sm btn-outline-secondary dropdown-toggle' type='button' data-bs-toggle='dropdown' aria-expanded='false' id='queueToggle'>All queues</button>
                 <ul class='dropdown-menu' id='queueDropdown' aria-labelledby='queueToggle'></ul>
             </div>
 
@@ -621,6 +621,7 @@
                     li.innerHTML = `<button class="dropdown-item" data-q="${q}">${label}</button>`;
                     queueDropdown.appendChild(li);
                 });
+                if (queueToggle) queueToggle.textContent = 'All queues';
             })();
 
             let selectedQueue = null; // null = none
@@ -682,7 +683,7 @@
                 filters.querySelectorAll('.nav-link').forEach(b=>b.classList.remove('active'));
                 btn.classList.add('active');
                 selectedQueue = null; // clear queue filter when switching tabs
-                if (queueToggle) queueToggle.textContent = 'Queues';
+                if (queueToggle) queueToggle.textContent = 'All queues';
                 apply();
             });
 
@@ -694,7 +695,7 @@
                 const v = item.getAttribute('data-q');
                 selectedQueue = (v === '' ? null : Number(v));
                 if (queueToggle) {
-                    queueToggle.textContent = selectedQueue === null ? 'Queues' : (QUEUE_NAMES[selectedQueue] || ('Queue ' + selectedQueue));
+                    queueToggle.textContent = selectedQueue === null ? 'All queues' : (QUEUE_NAMES[selectedQueue] || ('Queue ' + selectedQueue));
                 }
                 // Reset pills to All to make state predictable
                 if (filters) {
