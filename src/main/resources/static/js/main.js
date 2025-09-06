@@ -4,6 +4,15 @@ document.addEventListener('DOMContentLoaded', function() {
     if (riotIdInput) {
         riotIdInput.focus();
     }
+
+    // Fix any garbled separator characters in template rendering
+    try {
+        document.querySelectorAll('span.text-muted.mx-2').forEach(function(el){
+            if (el && /\uFFFD|�/.test(el.textContent)) {
+                el.textContent = '•';
+            }
+        });
+    } catch (e) { /* safe no-op */ }
 });
 
 // Optional: Improve collapse icon for match history
