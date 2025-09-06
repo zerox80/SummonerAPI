@@ -63,6 +63,7 @@ html, body {
 .orb-2 { bottom: -180px; right: -140px; background: radial-gradient(circle at 60% 60%, var(--app-accent-2), transparent 60%); }
 
 .search-group .form-control::placeholder { color: rgba(255,255,255,.6); }
+.theme-light .search-group .form-control::placeholder { color: rgba(0,0,0,.45); }
 .search-group .form-control:focus { box-shadow: none; }
 
 /* Suggestions dropdown */
@@ -92,4 +93,12 @@ html, body {
 .chart-canvas {
   height: 220px !important; /* ensure visible size across themes */
   max-height: 60vh;
+}
+
+/* Keep the doughnut chart from spanning the full card width */
+.chart-doughnut {
+  display: block;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto; /* center in card */
 }

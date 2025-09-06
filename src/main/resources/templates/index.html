@@ -89,7 +89,8 @@
                                 <img th:case="'SILVER'" th:src="@{/ui/images/tiers/silver.png}" alt="Silver Tier" class="tier-icon" loading="lazy"/>
                                 <img th:case="'BRONZE'" th:src="@{/ui/images/tiers/bronze.png}" alt="Bronze Tier" class="tier-icon" loading="lazy"/>
                                 <img th:case="'IRON'" th:src="@{/ui/images/tiers/iron.png}" alt="Iron Tier" class="tier-icon" loading="lazy"/>
-                                <img th:case="*" th:src="@{/ui/images/tiers/default.png}" alt="Unranked or unknown tier" class="tier-icon" loading="lazy"/>
+                                <!-- Fallback: use Iron as default to avoid missing asset -->
+                                <img th:case="*" th:src="@{/ui/images/tiers/iron.png}" alt="Unranked or unknown tier" class="tier-icon" loading="lazy"/>
                             </th:block>
                             <span th:text="${entry.queueType != null ? entry.queueType.replace('_', ' ').toLowerCase() : 'N/A'}" class="text-capitalize">Queue</span>
                         </h4>
@@ -173,7 +174,7 @@
             Champion Distribution (recent matches)
         </div>
         <div class="card-body">
-            <canvas id="championChart" class="chart-canvas" height="120"></canvas>
+            <canvas id="championChart" class="chart-canvas chart-doughnut" height="120"></canvas>
         </div>
     </div>
 
@@ -430,6 +431,16 @@
             themeStylesheet.href = `https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/${themeName}/bootstrap.min.css`;
             bodyEl.classList.remove('theme-dark', 'theme-light');
             bodyEl.classList.add(theme === 'light' ? 'theme-light' : 'theme-dark');
+            // Sync navbar and input text colors to theme
+            const navEl = document.querySelector('nav.navbar');
+            if (navEl) {
+                navEl.classList.remove('navbar-dark','bg-dark','navbar-light','bg-light');
+                if (theme === 'light') { navEl.classList.add('navbar-light','bg-light'); } else { navEl.classList.add('navbar-dark','bg-dark'); }
+            }
+            if (typeof riotIdInput !== 'undefined' && riotIdInput) {
+                riotIdInput.classList.toggle('text-light', theme !== 'light');
+                riotIdInput.classList.toggle('text-dark', theme === 'light');
+            }
             if (themeToggleBtn) {
                 themeToggleBtn.innerHTML = theme === 'light' ? '<i class="fa-regular fa-moon"></i>' : '<i class="fa-regular fa-sun"></i>';
             }
@@ -566,7 +577,14 @@
             const champChart = new Chart(champCtx, {
                 type: 'doughnut',
                 data: { labels: top.map(x=>x.label), datasets: [{ data: top.map(x=>x.value), backgroundColor: top.map((_,i)=>palette[i%palette.length]) }] },
-                options: { plugins: { legend: { labels: { color: colors.text } } } }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    radius: '80%',      // shrink overall donut size
+                    cutout: '65%',      // thinner ring for readability
+                    layout: { padding: 8 },
+                    plugins: { legend: { labels: { color: colors.text } } }
+                }
             });
             charts.push(champChart);
         }
