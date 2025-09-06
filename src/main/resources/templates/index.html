@@ -56,24 +56,39 @@
         </form>
     </section>
 
-    <div th:if="${summoner}" class="card section-card glass-card shadow-sm">
+    <!-- Two-column layout when a summoner is present -->
+    <div th:if="${summoner}" class="row g-4">
+        <!-- Left sidebar -->
+        <div class="col-12 col-lg-4 sidebar-sticky">
+        <div class="card section-card glass-card shadow-sm">
         <div class="card-header section-header d-flex align-items-center gap-2">
             <i class="fa-solid fa-user-astronaut text-primary"></i>
             Summoner Information
         </div>
         <div class="card-body">
-            <p><strong>Name:</strong> <span th:text="${not #strings.isEmpty(summoner.name) ? summoner.name : 'N/A'}">N/A</span></p>
-            <p><strong>Level:</strong> <span th:text="${summoner.summonerLevel}">N/A</span></p>
+            <div class="d-flex align-items-center mb-3">
+                <img th:if="${profileIconUrl}" th:src="${profileIconUrl}"
+                     alt="Profile Icon" class="rounded-circle me-3 profile-avatar"/>
+                <div>
+                    <h5 class="mb-0" th:text="${not #strings.isEmpty(summoner.name) ? summoner.name : 'N/A'}">N/A</h5>
+                    <small class="text-muted">Level <span th:text="${summoner.summonerLevel}">N/A</span></small>
+                </div>
+            </div>
             <!-- PUUID Removed as per request -->
             <!-- <p class="mb-0"><strong>PUUID:</strong> <small th:text="${summoner.puuid}" class="text-muted">N/A</small></p> -->
         </div>
 
         <!-- Display League Entries -->
         <div th:if="${leagueEntries != null && !leagueEntries.isEmpty()}" class="card section-card glass-card shadow-sm">
-            <div class="card-header section-header d-flex align-items-center gap-2">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <a data-bs-toggle="collapse" href="#rankedInfoCollapse" role="button" aria-expanded="true" aria-controls="rankedInfoCollapse"
+               class="d-flex align-items-center gap-2 text-decoration-none text-reset w-100">
                 <i class="fa-solid fa-trophy text-warning"></i>
-                Ranked Information
-            </div>
+                <span class="flex-grow-1">Ranked Information</span>
+                <i class="fas fa-chevron-down fa-xs chev"></i>
+            </a>
+        </div>
+        <div id="rankedInfoCollapse" class="collapse show">
             <div class="list-group list-group-flush">
                 <div th:each="entry : ${leagueEntries}" class="list-group-item league-entry">
                     <div class="d-flex w-100 justify-content-between mb-2">
@@ -109,32 +124,45 @@
             </div>
         </div>
 
-        <!-- Centered Winrate and Champion Stats -->
-        <div class="card-footer text-center bg-light" th:if="${summoner != null}">
-            <div th:if="${championPlayCounts != null && !championPlayCounts.isEmpty()}" class="mt-3">
-                <h5 class="my-2">Recently Played Champions (Last <span th:text="${matchHistory.size()}"></span> Games)</h5>
-                <ul class="list-unstyled">
-                    <li th:each="champEntry, iterStat : ${championPlayCounts.entrySet()}" th:if="${iterStat.count <= 5}" class="d-flex align-items-center justify-content-center mb-2">
-                        <img th:src="@{'/ui/champions/' + ${champEntry.key} + '.png'}"
-                             th:alt="${champEntry.key}"
-                             class="me-2 rounded"
-                             style="width: 32px; height: 32px; object-fit: cover;"
-                             loading="lazy"
-                             onerror="this.style.display='none'; var fallbackText = document.createElement('span'); fallbackText.className='text-muted small me-2'; fallbackText.textContent=this.alt + ' (image not found)'; this.parentNode.insertBefore(fallbackText, this);"/>
-                        <span th:text="${champEntry.key}" class="fw-bold">ChampionName</span>
-                        <span class="text-muted mx-2">-</span>
-                        <span th:text="${champEntry.value}">0</span>
-                        <span class="ms-1 text-muted">games</span>
-                    </li>
-                </ul>
-            </div>
-            <div th:if="${championPlayCounts != null && championPlayCounts.isEmpty() && matchHistory != null && !matchHistory.isEmpty()}" class="mt-3">
-                <p class="text-muted">No champion data from recent matches to display.</p>
+        </div>
+    </div>
+
+    <!-- Recently Played (own collapsible card) -->
+    <div th:if="${summoner != null}" class="card section-card glass-card shadow-sm">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <a data-bs-toggle="collapse" href="#recentlyCollapse" role="button" aria-expanded="true" aria-controls="recentlyCollapse"
+               class="d-flex align-items-center gap-2 text-decoration-none text-reset w-100">
+                <i class="fa-solid fa-clock-rotate-left text-info"></i>
+                <span class="flex-grow-1">Recently Played Champions (Last <span th:text="${matchHistory != null ? matchHistory.size() : 0}"></span> Games)</span>
+                <i class="fas fa-chevron-down fa-xs chev"></i>
+            </a>
+        </div>
+        <div id="recentlyCollapse" class="collapse show">
+            <div class="card-body py-3">
+                <div th:if="${championPlayCounts != null && !championPlayCounts.isEmpty()}">
+                    <ul class="list-unstyled mb-0">
+                        <li th:each="champEntry, iterStat : ${championPlayCounts.entrySet()}" th:if="${iterStat.count <= 5}" class="d-flex align-items-center mb-2">
+                            <img th:src="@{'/ui/champions/' + ${champEntry.key} + '.png'}"
+                                 th:alt="${champEntry.key}"
+                                 class="me-2 rounded"
+                                 style="width: 28px; height: 28px; object-fit: cover;"
+                                 loading="lazy"
+                                 onerror="this.style.display='none'; var fallbackText = document.createElement('span'); fallbackText.className='text-muted small me-2'; fallbackText.textContent=this.alt; this.parentNode.insertBefore(fallbackText, this);"/>
+                            <span th:text="${champEntry.key}" class="fw-medium">ChampionName</span>
+                            <span class="text-muted mx-2">•</span>
+                            <span th:text="${champEntry.value}">0</span>
+                            <span class="ms-1 text-muted">games</span>
+                        </li>
+                    </ul>
+                </div>
+                <div th:if="${championPlayCounts != null && championPlayCounts.isEmpty() && matchHistory != null && !matchHistory.isEmpty()}" class="mt-1">
+                    <p class="text-muted mb-0">No champion data from recent matches to display.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- LP Progression Chart -->
+    <!-- LP Progression Chart (collapsible) -->
     <div th:if="${
             summoner != null && (
                 (leagueEntries != null && !leagueEntries.isEmpty())
@@ -142,12 +170,18 @@
             )
         }" class="card section-card glass-card shadow-sm">
         <div class="card-header section-header d-flex align-items-center gap-2">
-            <i class="fa-solid fa-chart-line text-primary"></i>
-            LP Progression (last matches)
+            <a data-bs-toggle="collapse" href="#lpCollapse" role="button" aria-expanded="true" aria-controls="lpCollapse"
+               class="d-flex align-items-center gap-2 text-decoration-none text-reset w-100">
+                <i class="fa-solid fa-chart-line text-primary"></i>
+                <span class="flex-grow-1">LP Progression (last matches)</span>
+                <i class="fas fa-chevron-down fa-xs chev"></i>
+            </a>
         </div>
-        <div class="card-body">
-            <canvas id="lpChart" class="chart-canvas" height="120"></canvas>
-            <small class="text-muted d-block mt-2">If absolute LP is unavailable, the chart shows relative LP change.</small>
+        <div id="lpCollapse" class="collapse show">
+            <div class="card-body">
+                <canvas id="lpChart" class="chart-canvas" height="120"></canvas>
+                <small class="text-muted d-block mt-2">If absolute LP is unavailable, the chart shows relative LP change.</small>
+            </div>
         </div>
     </div>
 
@@ -167,17 +201,23 @@
         </div>
     </div>
 
-    <!-- Champion Distribution Chart -->
+    <!-- Champion Distribution Chart (collapsible) -->
     <div th:if="${championPlayCounts != null && !championPlayCounts.isEmpty()}" class="card section-card glass-card shadow-sm">
         <div class="card-header section-header d-flex align-items-center gap-2">
-            <i class="fa-solid fa-chart-pie text-warning"></i>
-            Champion Distribution (recent matches)
+            <a data-bs-toggle="collapse" href="#championCollapse" role="button" aria-expanded="true" aria-controls="championCollapse"
+               class="d-flex align-items-center gap-2 text-decoration-none text-reset w-100">
+                <i class="fa-solid fa-chart-pie text-warning"></i>
+                <span class="flex-grow-1">Champion Distribution (recent matches)</span>
+                <i class="fas fa-chevron-down fa-xs chev"></i>
+            </a>
         </div>
-        <div class="card-body">
-            <canvas id="championChart" class="chart-canvas chart-doughnut" height="120"></canvas>
+        <div id="championCollapse" class="collapse show">
+            <div class="card-body">
+                <canvas id="championChart" class="chart-canvas chart-doughnut" height="120"></canvas>
+            </div>
         </div>
     </div>
-
+    
     <div th:if="${leagueEntries != null && leagueEntries.isEmpty() && summoner != null && leagueError == null}" class="alert alert-info info-message glass-card" role="alert">
         No ranked data found for this summoner (possibly unranked in all queues).
     </div>
@@ -185,15 +225,21 @@
         <strong th:text="${leagueError}">Error loading league data.</strong>
     </div>
 
+        </div> <!-- /col (left) -->
+
+        <!-- Center content: Match History -->
+        <div class="col-12 col-lg-8">
     <!-- Match History Section -->
-    <div th:if="${summoner != null && matchHistory != null}" class="card section-card mt-4 glass-card shadow-sm">
-        <div class="card-header section-header d-flex align-items-center gap-2">
-            <i class="fa-solid fa-scroll text-info"></i>
-            <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="false" aria-controls="matchHistoryCollapse" class="text-decoration-none d-block flex-grow-1">
-                Match History <span class="small text-muted">(click to expand/collapse) <i class="fas fa-chevron-down fa-xs"></i></span>
+    <div th:if="${summoner != null && matchHistory != null}" class="card section-card glass-card shadow-sm">
+        <div class="card-header section-header compact d-flex align-items-center">
+            <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="true" aria-controls="matchHistoryCollapse"
+               class="d-flex align-items-center gap-2 text-decoration-none text-reset w-100">
+                <i class="fa-solid fa-scroll text-info"></i>
+                <span class="flex-grow-1">Match History</span>
+                <i class="fas fa-chevron-down fa-xs chev"></i>
             </a>
         </div>
-        <div class="collapse" id="matchHistoryCollapse">
+        <div class="collapse show" id="matchHistoryCollapse">
             <div th:if="${matchHistory.isEmpty()}" class="card-body">
                 <p th:if="${matchHistoryInfo}" th:text="${matchHistoryInfo}">No recent matches found.</p>
                 <p th:unless="${matchHistoryInfo}">No recent matches found or an error occurred.</p>
@@ -305,6 +351,9 @@
         </div>
     </div>
     <!-- End Match History Section -->
+
+        </div> <!-- /col (right) -->
+    </div> <!-- /row -->
 
     <div th:if="${error}" class="alert alert-danger error-message mt-4" role="alert">
         <strong th:text="${error}">An error occurred.</strong>
@@ -588,6 +637,15 @@
             });
             charts.push(champChart);
         }
+
+        // Resize charts when a collapsible section is shown (Bootstrap event)
+        try {
+            document.querySelectorAll('.collapse').forEach(el => {
+                el.addEventListener('shown.bs.collapse', () => {
+                    setTimeout(() => charts.forEach(ch => ch && ch.resize && ch.resize()), 60);
+                });
+            });
+        } catch (_) { /* no-op if Bootstrap JS is unavailable */ }
     });
 </script>
 </body>

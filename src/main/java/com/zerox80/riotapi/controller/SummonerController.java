@@ -140,6 +140,7 @@ public class SummonerController {
                 model.addAttribute("leagueEntries", profileData.leagueEntries());
                 model.addAttribute("matchHistory", profileData.matchHistory());
                 model.addAttribute("championPlayCounts", profileData.championPlayCounts());
+                model.addAttribute("profileIconUrl", profileData.profileIconUrl());
 
                 if (profileData.summoner() != null && profileData.suggestion() != null) {
                     updateSearchHistoryCookie(request, response, riotId, profileData.suggestion());

@@ -102,3 +102,13 @@ html, body {
   max-width: 520px;
   margin: 0 auto; /* center in card */
 }
+
+/* Sidebar + avatar */
+.sidebar-sticky { position: sticky; top: 6rem; align-self: start; }
+.profile-avatar { width: 64px; height: 64px; object-fit: cover; }
+
+/* Compact headers and chevron behavior */
+.section-header.compact { padding: .5rem .75rem; font-size: .95rem; }
+.section-header a { color: inherit; }
+.section-header a .chev { transition: transform .2s ease; }
+.section-header a:not(.collapsed) .chev { transform: rotate(180deg); }
