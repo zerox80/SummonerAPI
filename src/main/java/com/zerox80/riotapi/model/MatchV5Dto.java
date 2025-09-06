@@ -1,5 +1,8 @@
 package com.zerox80.riotapi.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MatchV5Dto {
     private MetadataDto metadata;
     private InfoDto info;

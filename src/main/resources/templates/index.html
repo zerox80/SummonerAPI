@@ -292,8 +292,8 @@
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
                 <th:block th:each="match, iterStat : ${matchHistory}">
                     <!-- Render only if we have basic match info -->
-                    <div th:if="${match != null and match.info != null}"
-                         th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}"
+                    <th:block th:if="${match != null and match.info != null}">
+                    <div th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}"
                          class="list-group-item match-row"
                          th:classappend="${me != null && me.win ? ' win' : ' loss'}"
                          th:attr="data-q=${match.info.queueId}, data-k=${me != null ? me.kills : 0}, data-d=${me != null ? me.deaths : 0}, data-a=${me != null ? me.assists : 0}, data-win=${me != null ? me.win : false}">
@@ -406,10 +406,16 @@
                         </table>
                         </details>
                     </div>
+                    </th:block>
                     <!-- Fallback row if match.info is missing (won't break page) -->
-                    <div th:if="${match == null or match.info == null}" class="list-group-item match-row">
-                        <div class="text-muted small">Unsupported match data</div>
+                    <th:block th:if="${match == null or match.info == null}">
+                    <div class="list-group-item match-row" th:attr="data-q=0, data-k=0, data-d=0, data-a=0, data-win=false">
+                        <div class="small">
+                            <strong th:text="${'Match ID: ' + (match != null && match.metadata != null ? match.metadata.matchId : 'N/A')}">Match ID: N/A</strong>
+                            <span class="text-muted ms-2">Unsupported match data</span>
+                        </div>
                     </div>
+                    </th:block>
                 </th:block>
             </div>
         </div>

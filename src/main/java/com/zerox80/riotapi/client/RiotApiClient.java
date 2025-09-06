@@ -2,7 +2,9 @@ package com.zerox80.riotapi.client;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.zerox80.riotapi.model.AccountDto;
 import com.zerox80.riotapi.model.LeagueEntryDTO;
 import com.zerox80.riotapi.model.MatchV5Dto;
@@ -54,7 +56,10 @@ public class RiotApiClient {
         this.platformRegion = platformRegion.toLowerCase();
         this.regionalRoute = determineRegionalRoute(this.platformRegion);
         this.communityDragonUrl = communityDragonUrl;
-        this.objectMapper = objectMapper;
+        // Copy and harden the mapper: Riot APIs use lowerCamelCase; ignore unknown fields
+        this.objectMapper = objectMapper.copy()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .setPropertyNamingStrategy(PropertyNamingStrategies.LOWER_CAMEL_CASE);
         ExecutorService virtualThreadExecutor = Executors.newVirtualThreadPerTaskExecutor();
         this.httpClient = HttpClient.newBuilder()
                 .version(HttpClient.Version.HTTP_2)
