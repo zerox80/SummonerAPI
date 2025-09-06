@@ -80,7 +80,7 @@
         <div class="card-body">
             <div class="d-flex align-items-center mb-3">
                 <img th:if="${profileIconUrl}" th:src="${profileIconUrl}"
-                     alt="Profile Icon" class="rounded-circle me-3 profile-avatar" loading="lazy"/>
+                     alt="Profile Icon" class="rounded-circle me-3 profile-avatar" width="112" height="112" loading="lazy"/>
                 <div>
                     <h5 class="mb-0" th:text="${not #strings.isEmpty(summoner.name) ? summoner.name : 'N/A'}">N/A</h5>
                     <small class="text-muted">Level <span th:text="${summoner.summonerLevel}">N/A</span></small>
@@ -160,7 +160,7 @@
                                   style="width: 28px; height: 28px; object-fit: cover;"
                                   loading="lazy"/>
                             <span th:text="${champEntry.key}" class="fw-medium">ChampionName</span>
-                            <span class="text-muted mx-2">ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢</span>
+                            <span class="text-muted mx-2">&bull;</span>
                             <span th:text="${champEntry.value}">0</span>
                             <span class="ms-1 text-muted">games</span>
                         </li>
@@ -268,7 +268,14 @@
                 </div>
             </div>
         </div>
-        <div class="px-3 py-2 border-top history-summary text-secondary small">\n            <span id="summaryWR">WR: -</span>\n            <span class="mx-2">&bull;</span>\n            <span id="summaryKDA">KDA: -</span>\n            <span class="mx-2">&bull;</span>\n            <span id="summaryCount">Last 20 games</span>\n        </div>\n        <div class="collapse show" id="matchHistoryCollapse">
+        <div class="px-3 py-2 border-top history-summary text-secondary small">
+            <span id="summaryWR">WR: -</span>
+            <span class="mx-2">&bull;</span>
+            <span id="summaryKDA">KDA: -</span>
+            <span class="mx-2">&bull;</span>
+            <span id="summaryCount">Last 20 games</span>
+        </div>
+        <div class="collapse show" id="matchHistoryCollapse">
             <div th:if="${matchHistory.isEmpty()}" class="card-body">
                 <p th:if="${matchHistoryInfo}" th:text="${matchHistoryInfo}">No recent matches found.</p>
                 <p th:unless="${matchHistoryInfo}">No recent matches found or an error occurred.</p>
