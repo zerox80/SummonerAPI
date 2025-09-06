@@ -17,8 +17,8 @@ services:
     depends_on:
       - db
     environment:
-      RIOT_API_KEY: "changeme"
-      RIOT_API_REGION: "euw1"
+      RIOT_API_KEY: ${RIOT_API_KEY}
+      RIOT_API_REGION: ${RIOT_API_REGION:-euw1}
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/summoner_db
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: postgres

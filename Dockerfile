@@ -1,12 +1,12 @@
 # ===== Stage 1: Build =====
-FROM eclipse-temurin:21-jdk AS build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 
 COPY pom.xml .
-RUN --mount=type=cache,target=/root/.m2 mvn -q -e -DskipTests dependency:go-offline
+RUN mvn -q -e -DskipTests dependency:go-offline
 
 COPY src ./src
-RUN --mount=type=cache,target=/root/.m2 mvn -q -DskipTests clean package
+RUN mvn -q -DskipTests clean package
 
 # ===== Stage 2: Runtime =====
 FROM eclipse-temurin:21-jre
