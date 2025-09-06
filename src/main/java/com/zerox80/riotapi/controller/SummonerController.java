@@ -55,7 +55,14 @@ public class SummonerController {
     }
 
     @GetMapping("/")
-    public String index() {
+    public String index(Model model) {
+        // Ensure all template variables exist to prevent Thymeleaf errors on first load
+        model.addAttribute("summoner", null);
+        model.addAttribute("leagueEntries", Collections.emptyList());
+        model.addAttribute("matchHistory", Collections.emptyList());
+        model.addAttribute("championPlayCounts", Collections.emptyMap());
+        model.addAttribute("matchHistoryInfo", null);
+        model.addAttribute("error", null);
         return "index";
     }
 
