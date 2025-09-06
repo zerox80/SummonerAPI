@@ -4,32 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>SummonerAPI - League Stats</title>
-    <!-- Bootswatch Darkly Theme -->
-    <link href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
-    <!-- Font Awesome for icons -->
+    <!-- Bootswatch Theme (swapped via JS for light/dark) -->
+    <link id="themeStylesheet" href="https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/darkly/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <!-- Google Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" integrity="sha384-k6RqeWeci5ZR/Lv4MR0sA0FfDOMS8k2Vz2mB8tXgWAgVUmV4w7k3j3vNMWD2K_iC" crossorigin="anonymous">
-    <style>
-        body {
-            padding-top: 5rem;
-        }
-        .section-card {
-            margin-bottom: 1.5rem;
-        }
-        .tier-icon {
-            width: 64px;
-            height: 64px;
-            margin-right: 1rem;
-        }
-        .match-table img {
-            width: 24px;
-            height: 24px;
-        }
-    </style>
+    <!-- App Styles -->
+    <link rel="stylesheet" href="/css/app.css">
 </head>
-<body>
-<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+<body class="app-body">
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top glass-nav border-bottom border-secondary-subtle">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/"><i class="fas fa-chart-line"></i> SummonerAPI</a>
+        <a class="navbar-brand fw-semibold" href="/"><i class="fas fa-chart-line"></i> SummonerAPI</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDefault" aria-controls="navbarDefault" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -39,28 +27,38 @@
                     <a class="nav-link active" aria-current="page" href="/">Home</a>
                 </li>
             </ul>
-            <span class="navbar-text">
+            <span class="navbar-text me-3">
                 Currently only EUW is supported.
             </span>
+            <button id="themeToggle" class="btn btn-sm btn-outline-secondary" type="button" title="Toggle theme">
+                <i class="fa-regular fa-moon"></i>
+            </button>
         </div>
     </div>
 </nav>
 
 <main class="container mt-5">
-    <div class="page-header text-center mb-4">
-        <h1 class="display-4">Summoner Profile Search</h1>
-    </div>
-
-    <form th:action="@{/search}" method="post" class="mb-5 position-relative">
-        <div class="input-group mb-3 shadow-sm">
-            <input type="text" id="riotId" name="riotId" class="form-control form-control-lg" placeholder="Enter Riot ID (e.g., Name#TAG)" required autocomplete="off" />
-            <button class="btn btn-primary btn-lg" type="submit"><i class="fas fa-search"></i> Search</button>
+    <!-- Hero/Search -->
+    <section class="hero glass-card rounded-4 p-4 p-md-5 mb-4 shadow-lg position-relative overflow-hidden">
+        <div class="position-absolute gradient-orb orb-1"></div>
+        <div class="position-absolute gradient-orb orb-2"></div>
+        <div class="text-center mb-4">
+            <h1 class="display-5 fw-bold mb-2">Summoner Profile Search</h1>
+            <p class="text-secondary mb-0">Check ranks, recent matches, and champions at a glance.</p>
         </div>
-        <div id="suggestions-container" class="list-group position-absolute w-100" style="z-index: 1000; top: 100%; left: 0;"></div>
-    </form>
+        <form th:action="@{/search}" method="post" class="position-relative">
+            <div class="input-group input-group-lg search-group shadow-sm rounded-3 overflow-hidden">
+                <span class="input-group-text bg-transparent border-0 ps-3"><i class="fas fa-user-tag text-secondary"></i></span>
+                <input type="text" id="riotId" name="riotId" class="form-control bg-transparent border-0 text-light" placeholder="Enter Riot ID (e.g., Name#TAG)" required autocomplete="off" />
+                <button class="btn btn-primary px-4" type="submit"><i class="fas fa-search me-1"></i> Search</button>
+            </div>
+            <div id="suggestions-container" class="list-group suggestions-dropdown w-100"></div>
+        </form>
+    </section>
 
-    <div th:if="${summoner}" class="card section-card">
-        <div class="card-header section-header">
+    <div th:if="${summoner}" class="card section-card glass-card shadow-sm">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-user-astronaut text-primary"></i>
             Summoner Information
         </div>
         <div class="card-body">
@@ -71,8 +69,9 @@
         </div>
 
         <!-- Display League Entries -->
-        <div th:if="${leagueEntries != null && !leagueEntries.isEmpty()}" class="card section-card">
-            <div class="card-header section-header">
+        <div th:if="${leagueEntries != null && !leagueEntries.isEmpty()}" class="card section-card glass-card shadow-sm">
+            <div class="card-header section-header d-flex align-items-center gap-2">
+                <i class="fa-solid fa-trophy text-warning"></i>
                 Ranked Information
             </div>
             <div class="list-group list-group-flush">
@@ -96,13 +95,12 @@
                         </h4>
                         <small th:text="${entry.tier != null ? entry.tier.toLowerCase() : 'Unranked'} + ' ' + ${entry.rank ?: '-'}" class="text-capitalize">Tier Rank</small>
                     </div>
-                    <p class="mb-1">
-                        <span th:text="${entry.leaguePoints}">0</span> LP
-                        <span th:if="${entry.lpGain != null}" th:text="'+' + ${entry.lpGain}" class="text-success"></span>
-                        <span th:if="${entry.lpLoss != null}" th:text="'-' + ${entry.lpLoss}" class="text-danger"></span>
-                        | Wins: <span th:text="${entry.wins}">0</span> |
-                        Losses: <span th:text="${entry.losses}">0</span>
-                    </p>
+                    <div class="mb-1 d-flex flex-wrap gap-2">
+                        <span class="badge rounded-pill bg-secondary-subtle text-light-emphasis" th:text="${entry.leaguePoints} + ' LP'">0 LP</span>
+                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis" th:text="'W ' + ${entry.wins}">W 0</span>
+                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis" th:text="'L ' + ${entry.losses}">L 0</span>
+                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis" th:if="${entry.wins + entry.losses > 0}" th:text="'WR ' + ${T(java.lang.Math).round( (entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0 )} + '%'">WR 0%</span>
+                    </div>
                     <small th:if="${entry.wins + entry.losses > 0}">
                         Winrate: <span th:text="${T(java.lang.Math).round( (entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0 )}">0</span>%
                     </small>
@@ -135,17 +133,41 @@
         </div>
     </div>
 
-    <div th:if="${leagueEntries != null && leagueEntries.isEmpty() && summoner != null && leagueError == null}" class="alert alert-info info-message" role="alert">
+    <!-- LP Progression Chart -->
+    <div th:if="${summoner != null && matchHistory != null}" class="card section-card glass-card shadow-sm">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-chart-line text-primary"></i>
+            LP Progression (last matches)
+        </div>
+        <div class="card-body">
+            <canvas id="lpChart" height="120"></canvas>
+            <small class="text-muted d-block mt-2">If absolute LP is unavailable, the chart shows relative LP change.</small>
+        </div>
+    </div>
+
+    <!-- Champion Distribution Chart -->
+    <div th:if="${championPlayCounts != null && !championPlayCounts.isEmpty()}" class="card section-card glass-card shadow-sm">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-chart-pie text-warning"></i>
+            Champion Distribution (recent matches)
+        </div>
+        <div class="card-body">
+            <canvas id="championChart" height="120"></canvas>
+        </div>
+    </div>
+
+    <div th:if="${leagueEntries != null && leagueEntries.isEmpty() && summoner != null && leagueError == null}" class="alert alert-info info-message glass-card" role="alert">
         No ranked data found for this summoner (possibly unranked in all queues).
     </div>
-    <div th:if="${leagueError}" class="alert alert-danger error-message" role="alert">
+    <div th:if="${leagueError}" class="alert alert-danger error-message glass-card" role="alert">
         <strong th:text="${leagueError}">Error loading league data.</strong>
     </div>
 
     <!-- Match History Section -->
-    <div th:if="${summoner != null && matchHistory != null}" class="card section-card mt-4">
-        <div class="card-header section-header">
-            <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="false" aria-controls="matchHistoryCollapse" class="text-decoration-none d-block">
+    <div th:if="${summoner != null && matchHistory != null}" class="card section-card mt-4 glass-card shadow-sm">
+        <div class="card-header section-header d-flex align-items-center gap-2">
+            <i class="fa-solid fa-scroll text-info"></i>
+            <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="false" aria-controls="matchHistoryCollapse" class="text-decoration-none d-block flex-grow-1">
                 Match History <span class="small text-muted">(click to expand/collapse) <i class="fas fa-chevron-down fa-xs"></i></span>
             </a>
         </div>
@@ -159,17 +181,18 @@
             </div>
 
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
-                <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-3">
+                <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-3 match-item">
                     <div class="d-flex w-100 justify-content-between">
                         <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ')} + ' (' + (${match.info.gameDuration / 60} + 'm ' + ${match.info.gameDuration % 60} + 's') + ')'">Game Mode (Duration)</h5>
                         <div class="d-flex align-items-center">
                             <th:block th:with="searchedSummonerPuuid=${summoner.puuid}">
                                 <th:block th:each="p : ${match.info.participants}" th:if="${p.puuid == searchedSummonerPuuid}">
-                                        <span th:text="${p.win ? 'Victory' : 'Defeat'}"
-                                              th:classappend="${p.win ? 'text-success fw-bold' : 'text-danger fw-bold'}"></span>
+                                        <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                              th:text="${p.win ? 'Victory' : 'Defeat'}"
+                                              th:classappend="${p.win ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'}"></span>
                                     <span th:if="${match.info.lpChange != null}"
                                           th:text="${match.info.lpChange > 0 ? '+' + match.info.lpChange + ' LP' : match.info.lpChange + ' LP'}"
-                                          th:classappend="${match.info.lpChange > 0 ? 'text-success ms-2' : (match.info.lpChange < 0 ? 'text-danger ms-2' : 'text-muted ms-2')}">
+                                          th:classappend="${match.info.lpChange > 0 ? 'badge rounded-pill bg-success-subtle text-success-emphasis ms-2' : (match.info.lpChange < 0 ? 'badge rounded-pill bg-danger-subtle text-danger-emphasis ms-2' : 'badge rounded-pill bg-secondary-subtle text-light-emphasis ms-2')}">
                                         </span>
                                 </th:block>
                             </th:block>
@@ -195,7 +218,7 @@
 
                         <!-- Blue Team Table -->
                         <h6 class="mt-3 text-primary">Blue Team</h6>
-                        <table class="table table-sm table-hover mt-2 match-table team-blue-table">
+                        <table class="table table-sm table-hover mt-2 match-table team-blue-table table-borderless align-middle">
                             <thead>
                             <tr>
                                 <th>Champion</th>
@@ -226,7 +249,7 @@
 
                         <!-- Red Team Table -->
                         <h6 class="mt-3 text-danger">Red Team</h6>
-                        <table class="table table-sm table-hover mt-2 match-table team-red-table">
+                        <table class="table table-sm table-hover mt-2 match-table team-red-table table-borderless align-middle">
                             <thead>
                             <tr>
                                 <th>Champion</th>
@@ -274,6 +297,8 @@
 
 <!-- Bootstrap JS Bundle (Popper.js included) -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+<!-- Chart.js for charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 <script th:src="@{/js/main.js}"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -370,6 +395,139 @@
                 suggestionsContainer.style.display = 'none';
             }
         });
+
+        // =====================
+        // Theme toggle + Charts
+        // =====================
+        const themeStylesheet = document.getElementById('themeStylesheet');
+        const themeToggleBtn = document.getElementById('themeToggle');
+        const bodyEl = document.body;
+        const THEMES = { dark: 'darkly', light: 'flatly' };
+
+        function applyTheme(theme) {
+            const themeName = THEMES[theme] || THEMES.dark;
+            themeStylesheet.href = `https://cdn.jsdelivr.net/npm/bootswatch@5.3.3/dist/${themeName}/bootstrap.min.css`;
+            bodyEl.classList.remove('theme-dark', 'theme-light');
+            bodyEl.classList.add(theme === 'light' ? 'theme-light' : 'theme-dark');
+            if (themeToggleBtn) {
+                themeToggleBtn.innerHTML = theme === 'light' ? '<i class="fa-regular fa-moon"></i>' : '<i class="fa-regular fa-sun"></i>';
+            }
+            localStorage.setItem('theme', theme);
+            setTimeout(() => charts.forEach(ch => ch && ch.resize()), 50);
+        }
+
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        applyTheme(savedTheme);
+        themeToggleBtn && themeToggleBtn.addEventListener('click', () => {
+            const nextTheme = bodyEl.classList.contains('theme-light') ? 'dark' : 'light';
+            applyTheme(nextTheme);
+        });
+
+        // Chart helpers
+        const charts = [];
+        const isDark = () => bodyEl.classList.contains('theme-dark');
+        const chartColors = () => ({
+            text: isDark() ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.7)',
+            grid: isDark() ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'
+        });
+        const fmt = (ts) => {
+            try {
+                const d = new Date(ts);
+                return d.toLocaleString(undefined, { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+            } catch { return String(ts); }
+        };
+
+        // Pull minimal data from Thymeleaf for charts
+        /*<![CDATA[*/
+        const leagueEntries = [];
+        /*[# th:each="e : ${leagueEntries}"]*/
+        leagueEntries.push({ queueType: /*[[${e.queueType}]]*/'', lp: /*[[${e.leaguePoints}]]*/0 });
+        /*[/]*/
+
+        const matches = [];
+        /*[# th:each="m : ${matchHistory}"]*/
+        matches.push({ t: /*[[${m.info.gameEndTimestamp}]]*/0, q: /*[[${m.info.queueId}]]*/0, d: /*[[${m.info.lpChange}]]*/null });
+        /*[/]*/
+
+        const champLabels = [];
+        const champValues = [];
+        /*[# th:each="e : ${championPlayCounts.entrySet()} "]*/
+        champLabels.push(/*[[${e.key}]]*/'');
+        champValues.push(/*[[${e.value}]]*/0);
+        /*[/]*/
+        /*]]>*/
+
+        function buildLpSeries(queueId, queueTypeKey) {
+            const filtered = matches
+                .filter(m => m.q === queueId && m.d !== null && typeof m.t === 'number')
+                .sort((a,b) => a.t - b.t); // oldest -> newest
+            if (filtered.length === 0) return null;
+
+            const currentEntry = leagueEntries.find(e => e.queueType === queueTypeKey);
+            const deltas = filtered.map(m => m.d);
+            const times = filtered.map(m => m.t);
+
+            if (currentEntry && typeof currentEntry.lp === 'number') {
+                let cur = currentEntry.lp;
+                const abs = new Array(deltas.length);
+                for (let i = deltas.length - 1; i >= 0; i--) { abs[i] = cur; cur -= (deltas[i] ?? 0); }
+                return { times, values: abs };
+            } else {
+                let sum = 0; const rel = deltas.map(d => (sum += (d ?? 0)));
+                return { times, values: rel };
+            }
+        }
+
+        const solo = buildLpSeries(420, 'RANKED_SOLO_5x5');
+        const flex = buildLpSeries(440, 'RANKED_FLEX_SR');
+        const lpCtx = document.getElementById('lpChart');
+        if (lpCtx && (solo || flex)) {
+            const colors = chartColors();
+            const allTimes = Array.from(new Set([...(solo?.times||[]), ...(flex?.times||[])])).sort((a,b)=>a-b);
+            const labels = allTimes.map(fmt);
+            function align(series) {
+                if (!series) return new Array(allTimes.length).fill(null);
+                return allTimes.map(t => {
+                    const idx = series.times.indexOf(t);
+                    return idx >= 0 ? series.values[idx] : null;
+                });
+            }
+            const ds = [];
+            if (solo) ds.push({ label: 'Solo/Duo', data: align(solo), borderColor: '#C8AA6E', backgroundColor: 'rgba(200,170,110,0.2)', tension: .25, spanGaps: true });
+            if (flex) ds.push({ label: 'Flex', data: align(flex), borderColor: '#0AC8B9', backgroundColor: 'rgba(10,200,185,0.2)', tension: .25, spanGaps: true });
+
+            const lpChart = new Chart(lpCtx, {
+                type: 'line',
+                data: { labels, datasets: ds },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { ticks: { color: colors.text }, grid: { color: colors.grid } },
+                        y: { ticks: { color: colors.text }, grid: { color: colors.grid } }
+                    },
+                    plugins: { legend: { labels: { color: colors.text } } }
+                }
+            });
+            charts.push(lpChart);
+        }
+
+        const champCtx = document.getElementById('championChart');
+        if (champCtx && champLabels.length > 0) {
+            const colors = chartColors();
+            const combined = champLabels.map((l,i)=>({ label:l, value: champValues[i]||0 }));
+            combined.sort((a,b)=>b.value-a.value);
+            const top = combined.slice(0,8);
+            const otherTotal = combined.slice(8).reduce((s,c)=>s+c.value,0);
+            if (otherTotal>0) top.push({ label:'Other', value: otherTotal });
+            const palette = ['#C8AA6E','#0AC8B9','#1E90FF','#A78BFA','#34D399','#F59E0B','#F472B6','#60A5FA','#FFD166','#06D6A0'];
+            const champChart = new Chart(champCtx, {
+                type: 'doughnut',
+                data: { labels: top.map(x=>x.label), datasets: [{ data: top.map(x=>x.value), backgroundColor: top.map((_,i)=>palette[i%palette.length]) }] },
+                options: { plugins: { legend: { labels: { color: colors.text } } } }
+            });
+            charts.push(champChart);
+        }
     });
 </script>
 </body>
