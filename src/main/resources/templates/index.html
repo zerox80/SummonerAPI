@@ -246,7 +246,7 @@
             <a data-bs-toggle="collapse" href="#matchHistoryCollapse" role="button" aria-expanded="true" aria-controls="matchHistoryCollapse"
                class="d-flex align-items-center gap-2 text-decoration-none text-reset w-100">
                 <i class="fa-solid fa-scroll text-info" aria-hidden="true"></i>
-                <span class="flex-grow-1">Match History</span>
+                <span class="flex-grow-1">Match History <small class="text-muted" th:text="${matchHistory != null ? '(' + matchHistory.size() + ')' : ''}"></small></span>
                 <i class="fas fa-chevron-down fa-xs chev" aria-hidden="true"></i>
             </a>
         </div>
@@ -299,7 +299,14 @@
                         </th:block>
                     </span>
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ') + ' (' + (match.info.gameDuration / 60) + 'm ' + (match.info.gameDuration % 60) + 's)'}">Game Mode (Duration)</h5>
+                        <h5 class="mb-1" th:text="${
+                              (match.info.gameMode != null ? #strings.replace(match.info.gameMode,'_',' ') : (match.info.queueId != null ? 'Queue ' + match.info.queueId : 'Match'))
+                              + ' ('
+                              + ((match.info.gameDuration != null ? match.info.gameDuration : 0) / 60)
+                              + 'm '
+                              + ((match.info.gameDuration != null ? match.info.gameDuration : 0) % 60)
+                              + 's)'
+                        }">Game Mode (Duration)</h5>
                         <div class="d-flex align-items-center">
                             <th:block th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
                                 <span class="badge rounded-pill px-3 py-2 fw-semibold"
@@ -318,7 +325,7 @@
                     </p>
 
                     <!-- Searched Summoner's Performance -->
-                    <div th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
+                    <div th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
                         <strong>Your Performance:</strong>
                         <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded" loading="lazy"
                              />
@@ -327,7 +334,7 @@
                     </div>
 
                     <!-- Participants Table -->
-                    <details class="mt-2">
+                    <details class="mt-2" th:if="${match.info.participants != null}">
                         <summary class="btn btn-sm btn-outline-secondary">Show All Participants <i class="fas fa-users fa-xs" aria-hidden="true"></i></summary>
 
                         <!-- Blue Team Table -->
