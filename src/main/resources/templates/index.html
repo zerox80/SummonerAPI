@@ -93,13 +93,13 @@
                             </th:block>
                             <span th:text="${entry.queueType != null ? entry.queueType.replace('_', ' ').toLowerCase() : 'N/A'}" class="text-capitalize">Queue</span>
                         </h4>
-                        <small th:text="${entry.tier != null ? entry.tier.toLowerCase() : 'Unranked'} + ' ' + ${entry.rank ?: '-'}" class="text-capitalize">Tier Rank</small>
+                        <small th:text="${(entry.tier != null ? entry.tier.toLowerCase() : 'Unranked') + ' ' + (entry.rank != null ? entry.rank : '-')}" class="text-capitalize">Tier Rank</small>
                     </div>
                     <div class="mb-1 d-flex flex-wrap gap-2">
-                        <span class="badge rounded-pill bg-secondary-subtle text-light-emphasis" th:text="${entry.leaguePoints} + ' LP'">0 LP</span>
-                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis" th:text="'W ' + ${entry.wins}">W 0</span>
-                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis" th:text="'L ' + ${entry.losses}">L 0</span>
-                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis" th:if="${entry.wins + entry.losses > 0}" th:text="'WR ' + ${T(java.lang.Math).round( (entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0 )} + '%'">WR 0%</span>
+                        <span class="badge rounded-pill bg-secondary-subtle text-light-emphasis" th:text="${entry.leaguePoints + ' LP'}">0 LP</span>
+                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis" th:text="${'W ' + entry.wins}">W 0</span>
+                        <span class="badge rounded-pill bg-danger-subtle text-danger-emphasis" th:text="${'L ' + entry.losses}">L 0</span>
+                        <span class="badge rounded-pill bg-info-subtle text-info-emphasis" th:if="${entry.wins + entry.losses > 0}" th:text="${'WR ' + T(java.lang.Math).round((entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0) + '%'}">WR 0%</span>
                     </div>
                     <small th:if="${entry.wins + entry.losses > 0}">
                         Winrate: <span th:text="${T(java.lang.Math).round( (entry.wins * 1.0 / (entry.wins + entry.losses)) * 100.0 )}">0</span>%
@@ -183,7 +183,7 @@
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
                 <div th:each="match, iterStat : ${matchHistory}" class="list-group-item py-3 match-item">
                     <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ')} + ' (' + (${match.info.gameDuration / 60} + 'm ' + ${match.info.gameDuration % 60} + 's') + ')'">Game Mode (Duration)</h5>
+                        <h5 class="mb-1" th:text="${match.info.gameMode.replace('_', ' ') + ' (' + (match.info.gameDuration / 60) + 'm ' + (match.info.gameDuration % 60) + 's)'}">Game Mode (Duration)</h5>
                         <div class="d-flex align-items-center">
                             <th:block th:with="searchedSummonerPuuid=${summoner.puuid}">
                                 <th:block th:each="p : ${match.info.participants}" th:if="${p.puuid == searchedSummonerPuuid}">
@@ -199,7 +199,7 @@
                         </div>
                     </div>
                     <p class="mb-2 match-details-summary">
-                        <small th:text="'Match ID: ' + ${match.metadata.matchId}"></small> &bull;
+                        <small th:text="${'Match ID: ' + match.metadata.matchId}"></small> &bull;
                         <small th:text="${#dates.format(new java.util.Date(match.info.gameEndTimestamp), 'dd MMM yyyy HH:mm')}"></small>
                     </p>
 
@@ -236,8 +236,8 @@
                                 </td>
                                 <td>
                                     <a th:if="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
-                                       th:href="@{/search(riotId=${p.riotIdGameName} + '#' + ${p.riotIdTagline})}"
-                                       th:text="${p.riotIdGameName} + '#' + ${p.riotIdTagline}"
+                                       th:href="@{/search(riotId=${p.riotIdGameName + '#' + p.riotIdTagline})}"
+                                       th:text="${p.riotIdGameName + '#' + p.riotIdTagline}"
                                        title="Search this player">Player Name</a>
                                     <span th:unless="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
                                           th:text="${p.summonerName} ?: 'Unknown Player'">Player Name</span>
@@ -267,8 +267,8 @@
                                 </td>
                                 <td>
                                     <a th:if="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
-                                       th:href="@{/search(riotId=${p.riotIdGameName} + '#' + ${p.riotIdTagline})}"
-                                       th:text="${p.riotIdGameName} + '#' + ${p.riotIdTagline}"
+                                       th:href="@{/search(riotId=${p.riotIdGameName + '#' + p.riotIdTagline})}"
+                                       th:text="${p.riotIdGameName + '#' + p.riotIdTagline}"
                                        title="Search this player">Player Name</a>
                                     <span th:unless="${p.riotIdGameName != null && p.riotIdTagline != null && !(p.riotIdGameName.isBlank() && p.riotIdTagline.isBlank())}"
                                           th:text="${p.summonerName} ?: 'Unknown Player'">Player Name</span>
