@@ -327,7 +327,7 @@
                         </p>
 
                         <!-- Searched Summoner's Performance -->
-                        <div th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
+                        <div th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
                             <strong>Your Performance:</strong>
                             <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded" loading="lazy" />
                             <span th:text="${p.championName}" class="fw-medium">Champ</span> -
