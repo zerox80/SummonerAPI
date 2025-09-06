@@ -285,57 +285,58 @@
             </div>
 
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
-                <div th:each="match, iterStat : ${matchHistory}"
-                     th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}"
-                     class="list-group-item match-row"
-                     th:classappend="${me != null && me.win ? ' win' : ' loss'}"
-                     th:attr="data-q=${match.info.queueId}, data-k=${me != null ? me.kills : 0}, data-d=${me != null ? me.deaths : 0}, data-a=${me != null ? me.assists : 0}, data-win=${me != null ? me.win : false}">
-                    <span class="d-none search-index">
-                        <th:block th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
-                            <span th:text="${me != null ? me.championName : ''}"></span>
-                        </th:block>
-                        <th:block th:each="p : ${match.info.participants}">
-                            <span th:text="${(p.riotIdGameName != null && p.riotIdTagline != null) ? p.riotIdGameName + '#' + p.riotIdTagline : ''}"></span>
-                        </th:block>
-                    </span>
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1" th:text="${
-                              (match.info.gameMode != null ? #strings.replace(match.info.gameMode,'_',' ') : (match.info.queueId != null ? 'Queue ' + match.info.queueId : 'Match'))
-                              + ' ('
-                              + ((match.info.gameDuration != null ? match.info.gameDuration : 0) / 60)
-                              + 'm '
-                              + ((match.info.gameDuration != null ? match.info.gameDuration : 0) % 60)
-                              + 's)'
-                        }">Game Mode (Duration)</h5>
-                        <div class="d-flex align-items-center">
-                            <th:block th:with="me=${#lists.isEmpty(match.info.participants.?[puuid==summoner.puuid]) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
-                                <span class="badge rounded-pill px-3 py-2 fw-semibold"
-                                      th:text="${me != null && me.win ? 'Victory' : 'Defeat'}"
-                                      th:classappend="${me != null && me.win ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'}"></span>
-                                <span th:if="${match.info.lpChange != null}"
-                                      th:text="${(match.info.lpChange > 0 ? '+' : '') + match.info.lpChange + ' LP'}"
-                                      th:classappend="${match.info.lpChange > 0 ? 'lp-badge gain ms-2' : (match.info.lpChange < 0 ? 'lp-badge loss ms-2' : 'lp-badge neutral ms-2')}">
-                                </span>
+                <th:block th:each="match, iterStat : ${matchHistory}">
+                    <!-- Render only if we have basic match info -->
+                    <div th:if="${match != null and match.info != null}"
+                         th:with="me=${#lists.isEmpty(match.info.participants) ? null : match.info.participants.?[puuid==summoner.puuid][0]}"
+                         class="list-group-item match-row"
+                         th:classappend="${me != null && me.win ? ' win' : ' loss'}"
+                         th:attr="data-q=${match.info.queueId}, data-k=${me != null ? me.kills : 0}, data-d=${me != null ? me.deaths : 0}, data-a=${me != null ? me.assists : 0}, data-win=${me != null ? me.win : false}">
+                        <span class="d-none search-index">
+                            <th:block th:with="me=${#lists.isEmpty(match.info.participants) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
+                                <span th:text="${me != null ? me.championName : ''}"></span>
                             </th:block>
+                            <th:block th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}">
+                                <span th:text="${(p.riotIdGameName != null && p.riotIdTagline != null) ? p.riotIdGameName + '#' + p.riotIdTagline : ''}"></span>
+                            </th:block>
+                        </span>
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1" th:text="${
+                                  (match.info.gameMode != null ? #strings.replace(match.info.gameMode,'_',' ') : (match.info.queueId != null ? 'Queue ' + match.info.queueId : 'Match'))
+                                  + ' ('
+                                  + ((match.info.gameDuration != null ? match.info.gameDuration : 0) / 60)
+                                  + 'm '
+                                  + ((match.info.gameDuration != null ? match.info.gameDuration : 0) % 60)
+                                  + 's)'
+                            }">Game Mode (Duration)</h5>
+                            <div class="d-flex align-items-center">
+                                <th:block th:with="me=${#lists.isEmpty(match.info.participants) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
+                                    <span class="badge rounded-pill px-3 py-2 fw-semibold"
+                                          th:text="${me != null && me.win ? 'Victory' : 'Defeat'}"
+                                          th:classappend="${me != null && me.win ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'}"></span>
+                                    <span th:if="${match.info.lpChange != null}"
+                                          th:text="${(match.info.lpChange > 0 ? '+' : '') + match.info.lpChange + ' LP'}"
+                                          th:classappend="${match.info.lpChange > 0 ? 'lp-badge gain ms-2' : (match.info.lpChange < 0 ? 'lp-badge loss ms-2' : 'lp-badge neutral ms-2')}">
+                                    </span>
+                                </th:block>
+                            </div>
                         </div>
-                    </div>
-                    <p class="mb-2 match-details-summary">
-                        <small th:text="${'Match ID: ' + match.metadata.matchId}"></small> &bull;
-                        <small th:text="${#dates.format(new java.util.Date(match.info.gameEndTimestamp), 'dd MMM yyyy HH:mm')}"></small>
-                    </p>
+                        <p class="mb-2 match-details-summary">
+                            <small th:text="${'Match ID: ' + (match.metadata != null ? match.metadata.matchId : 'N/A')}"></small> &bull;
+                            <small th:text="${match.info.gameEndTimestamp != null ? #dates.format(new java.util.Date(match.info.gameEndTimestamp), 'dd MMM yyyy HH:mm') : '--'}"></small>
+                        </p>
 
-                    <!-- Searched Summoner's Performance -->
-                    <div th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
-                        <strong>Your Performance:</strong>
-                        <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded" loading="lazy"
-                             />
-                        <span th:text="${p.championName}" class="fw-medium">Champ</span> -
-                        KDA: <span th:text="${p.kda}" class="fw-bold">K/D/A</span>
-                    </div>
+                        <!-- Searched Summoner's Performance -->
+                        <div th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}" th:if="${p.puuid == summoner.puuid}" class="mb-3 p-2 player-performance">
+                            <strong>Your Performance:</strong>
+                            <img th:src="@{'/ui/champions/' + ${p.championName} + '.png'}" th:alt="${p.championName}" width="32" height="32" class="me-1 align-middle rounded" loading="lazy" />
+                            <span th:text="${p.championName}" class="fw-medium">Champ</span> -
+                            KDA: <span th:text="${p.kda}" class="fw-bold">K/D/A</span>
+                        </div>
 
-                    <!-- Participants Table -->
-                    <details class="mt-2" th:if="${match.info.participants != null}">
-                        <summary class="btn btn-sm btn-outline-secondary">Show All Participants <i class="fas fa-users fa-xs" aria-hidden="true"></i></summary>
+                        <!-- Participants Table -->
+                        <details class="mt-2" th:if="${match.info.participants != null}">
+                            <summary class="btn btn-sm btn-outline-secondary">Show All Participants <i class="fas fa-users fa-xs" aria-hidden="true"></i></summary>
 
                         <!-- Blue Team Table -->
                         <h6 class="mt-3 text-primary">Blue Team</h6>
@@ -398,8 +399,13 @@
                             </tr>
                             </tbody>
                         </table>
-                    </details>
-                </div>
+                        </details>
+                    </div>
+                    <!-- Fallback row if match.info is missing (won't break page) -->
+                    <div th:if="${match == null or match.info == null}" class="list-group-item match-row">
+                        <div class="text-muted small">Unsupported match data</div>
+                    </div>
+                </th:block>
             </div>
         </div>
     </div>
