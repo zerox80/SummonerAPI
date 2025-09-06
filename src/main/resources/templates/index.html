@@ -284,16 +284,21 @@
                 Error loading match history.
             </div>
 
+            <!-- Empty-state message for when filters/search hide all rows -->
+            <div id="noMatchesMsg" class="text-muted small px-3 py-2" style="display:none;">
+                No matches match your current filters or search.
+            </div>
+
             <div class="list-group list-group-flush" th:unless="${matchHistory.isEmpty()}">
                 <th:block th:each="match, iterStat : ${matchHistory}">
                     <!-- Render only if we have basic match info -->
                     <div th:if="${match != null and match.info != null}"
-                         th:with="me=${#lists.isEmpty(match.info.participants) ? null : match.info.participants.?[puuid==summoner.puuid][0]}"
+                         th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}"
                          class="list-group-item match-row"
                          th:classappend="${me != null && me.win ? ' win' : ' loss'}"
                          th:attr="data-q=${match.info.queueId}, data-k=${me != null ? me.kills : 0}, data-d=${me != null ? me.deaths : 0}, data-a=${me != null ? me.assists : 0}, data-win=${me != null ? me.win : false}">
                         <span class="d-none search-index">
-                            <th:block th:with="me=${#lists.isEmpty(match.info.participants) ? null : match.info.participants.?[puuid==summoner.puuid][0]}">
+                            <th:block th:with="meList=${match.info.participants != null ? match.info.participants.?[puuid==summoner.puuid] : null}, me=${meList != null && !#lists.isEmpty(meList) ? meList[0] : null}">
                                 <span th:text="${me != null ? me.championName : ''}"></span>
                             </th:block>
                             <th:block th:if="${match.info.participants != null}" th:each="p : ${match.info.participants}">
@@ -571,7 +576,6 @@
         // =====================
         (function(){
             const rows = Array.from(document.querySelectorAll('.match-row'));
-            if (!rows.length) return;
             const filters = document.getElementById('historyFilters');
             const searchInput = document.getElementById('matchSearch');
             const elWR = document.getElementById('summaryWR');
@@ -579,6 +583,8 @@
             const elCount = document.getElementById('summaryCount');
             const queueToggle = document.getElementById('queueToggle');
             const queueDropdown = document.getElementById('queueDropdown');
+            const noMsg = document.getElementById('noMatchesMsg');
+            if (!rows.length && noMsg) { noMsg.style.display = ''; }
 
             const QUEUE_NAMES = {
                 420: 'Ranked Solo/Duo',
@@ -646,6 +652,9 @@
                     r.style.display = show ? '' : 'none';
                 });
                 updateSummary();
+                // Toggle empty-state message based on visible rows
+                const anyVisible = rows.some(r => r.style.display !== 'none');
+                if (noMsg) noMsg.style.display = anyVisible ? 'none' : '';
             }
 
             function updateSummary(){
