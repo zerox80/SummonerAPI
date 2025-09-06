@@ -441,19 +441,25 @@
         /*<![CDATA[*/
         const leagueEntries = [];
         /*[# th:each="e : ${leagueEntries}"]*/
-        leagueEntries.push({ queueType: /*[[${e.queueType}]]*/'', lp: /*[[${e.leaguePoints}]]*/0 });
+        /*[# th:if="${e != null}"]*/
+        leagueEntries.push({ queueType: /*[[${e?.queueType}]]*/'', lp: /*[[${e?.leaguePoints}]]*/0 });
+        /*[/]*/
         /*[/]*/
 
         const matches = [];
         /*[# th:each="m : ${matchHistory}"]*/
-        matches.push({ t: /*[[${m.info.gameEndTimestamp}]]*/0, q: /*[[${m.info.queueId}]]*/0, d: /*[[${m.info.lpChange}]]*/null });
+        /*[# th:if="${m != null}"]*/
+        matches.push({ t: /*[[${m?.info?.gameEndTimestamp}]]*/0, q: /*[[${m?.info?.queueId}]]*/0, d: /*[[${m?.info?.lpChange}]]*/null });
+        /*[/]*/
         /*[/]*/
 
         const champLabels = [];
         const champValues = [];
         /*[# th:each="e : ${championPlayCounts.entrySet()} "]*/
-        champLabels.push(/*[[${e.key}]]*/'');
-        champValues.push(/*[[${e.value}]]*/0);
+        /*[# th:if="${e != null}"]*/
+        champLabels.push(/*[[${e?.key}]]*/'');
+        champValues.push(/*[[${e?.value}]]*/0);
+        /*[/]*/
         /*[/]*/
         /*]]>*/
 

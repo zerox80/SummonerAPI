@@ -62,6 +62,8 @@ public class SummonerController {
         model.addAttribute("matchHistory", Collections.emptyList());
         model.addAttribute("championPlayCounts", Collections.emptyMap());
         model.addAttribute("matchHistoryInfo", null);
+        model.addAttribute("leagueError", null);
+        model.addAttribute("matchHistoryError", null);
         model.addAttribute("error", null);
         return "index";
     }
